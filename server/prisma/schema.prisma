@@ -1,0 +1,64 @@
+// Налаштування генератора та підключення до БД
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// МОДЕЛЬ КОРИСТУВАЧА
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  passwordHash  String
+  fullName  String
+  orders    Order[] // Один користувач — багато замовлень
+  createdAt DateTime @default(now())
+}
+
+// МОДЕЛЬ ТОВАРУ
+model Product {
+  id          Int         @id @default(autoincrement())
+  title       String
+  description String?
+  price       Float
+  imageUrl    String?
+  category    String      @default("Запчастини")
+  createdAt   DateTime    @default(now())
+  specs       Json?     
+  views       Int         @default(0)  
+  
+  orderItems  OrderItem[] 
+}
+
+// МОДЕЛЬ ЗАМОВЛЕННЯ
+model Order {
+  id          Int      @id @default(autoincrement())
+  totalAmount Float
+  status      String   @default("Очікує")
+  createdAt   DateTime @default(now())
+
+  // Зв'язок із користувачем
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  // Зв'язок із позиціями в замовленні
+  items OrderItem[]
+}
+
+// МОДЕЛЬ ПОЗИЦІЇ В ЗАМОВЛЕННІ
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  quantity Int
+  price    Float // Фіксуємо ціну на момент покупки
+
+  // Зв'язок із замовленням
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  // Зв'язок із товаром
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+}
