@@ -89,7 +89,7 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
 
         {/* Заголовок сторінки */}
         <h1 className="text-2xl font-black uppercase tracking-widest text-gray-900 mb-8 border-b-2 border-black pb-4">
-          Ваш Кошик <span className="text-sm font-mono font-normal normal-case text-gray-500">({cartItems.length} позицій)</span>
+          Ваш Кошик <span className="text-sm font-mono font-normal normal-case text-gray-500"></span>
         </h1>
 
         {cartItems.length === 0 ? (
@@ -101,7 +101,6 @@ const Cart = ({ cartItems, removeFromCart, updateQuantity }) => {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
             {/* СПИСОК ТОВАРІВ (Займає 2/3 ширини) */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(item => (

@@ -6,6 +6,7 @@ import AuthForm from './AuthForm';
 import Shop from './Shop'; 
 import ProductDetails from './ProductDetails'; 
 import Cart from './Cart'; // ✅ ІМПОРТУЄМО НАШУ НОВУ СТОРІНКУ КОШИКА
+import Favorites from './Favorites'; // ✅ ІМПОРТУЄМО СТОРІНКУ ОБРАНОГО
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -25,6 +26,36 @@ function App() {
     window.addEventListener('storage', updateCartFromStorage);
     return () => window.removeEventListener('storage', updateCartFromStorage);
   }, []);
+
+  // 🔄 ФУНКЦІЯ ДОДАВАННЯ ТОВАРУ В КОШИК (ГЛОБАЛЬНА)
+  const addToCart = (product) => {
+    const savedCart = localStorage.getItem('cart');
+    let currentCart = savedCart ? JSON.parse(savedCart) : [];
+
+    // Шукаємо, чи є вже такий товар в кошику
+    const existingIndex = currentCart.findIndex(item => item.id === product.id);
+
+    if (existingIndex > -1) {
+      // Якщо є — збільшуємо кількість на 1
+      currentCart[existingIndex].quantity += 1;
+    } else {
+      // Якщо немає — додаємо новий об'єкт із початковою кількістю 1
+      currentCart.push({
+        id: product.id,
+        title: product.title,
+        price: Number(product.price),
+        imageUrl: product.imageUrl,
+        quantity: 1
+      });
+    }
+
+    // Зберігаємо в localStorage та оновлюємо глобальний стейт
+    localStorage.setItem('cart', JSON.stringify(currentCart));
+    setCartItems(currentCart);
+    
+    // Тригеримо івент 'storage' для синхронізації з іншими компонентами (наприклад, Header)
+    window.dispatchEvent(new Event('storage'));
+  };
 
   // 🔄 ФУНКЦІЯ ВИДАЛЕННЯ ТОВАРУ
   const removeFromCart = (id) => {
@@ -57,13 +88,13 @@ function App() {
             {/* Захищені сторінки (доступні тільки після авторизації) */}
             <Route 
               path="/shop" 
-              element={isAuthenticated ? <Shop /> : <Navigate to="/login" />} 
+              element={isAuthenticated ? <Shop addToCart={addToCart} /> : <Navigate to="/login" />} 
             />
             
             {/* Детальна сторінка товару */}
             <Route 
               path="/product/:id" 
-              element={isAuthenticated ? <ProductDetails /> : <Navigate to="/login" />} 
+              element={isAuthenticated ? <ProductDetails addToCart={addToCart} /> : <Navigate to="/login" />} 
             />
 
             {/* 🛒 НАШ НОВИЙ МАРШРУТ: Окрема розширена сторінка кошика */}
@@ -76,6 +107,18 @@ function App() {
                     removeFromCart={removeFromCart} 
                     updateQuantity={updateQuantity} 
                   />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              } 
+            />
+
+            {/* ❤️ СТОРІНКА ОБРАНИХ ТОВАРІВ (ЗАХИЩЕНА) */}
+            <Route 
+              path="/favorites" 
+              element={
+                isAuthenticated ? (
+                  <Favorites addToCart={addToCart} />
                 ) : (
                   <Navigate to="/login" />
                 )

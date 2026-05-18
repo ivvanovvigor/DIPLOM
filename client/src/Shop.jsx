@@ -80,7 +80,7 @@ const Shop = () => {
         title: product.title,
         price: Number(product.price),
         quantity: 1,
-        image: product.imageUrl
+        imageUrl: product.imageUrl
       });
     }
 
@@ -91,6 +91,38 @@ const Shop = () => {
     setToastMessage(`Товар "${product.title}" додано до кошика!`);
   };
 
+  const toggleFavorite = (product) => {
+    const savedFavorites = localStorage.getItem('favorites');
+    let currentFavorites = savedFavorites ? JSON.parse(savedFavorites) : [];
+
+    const existingIndex = currentFavorites.findIndex(item => item.id === product.id);
+
+    if (existingIndex > -1) {
+      // Якщо товар уже є у вибраному — видаляємо його (при повторному кліку)
+      currentFavorites.splice(existingIndex, 1);
+      if (typeof setToastMessage === 'function') {
+        setToastMessage(`Товар "${product.title}" видалено з вибраного`);
+      }
+    } else {
+      // Якщо товару немає — додаємо об'єкт (не забуваємо про imageUrl, який ми чинили)
+      currentFavorites.push({
+        id: product.id,
+        title: product.title,
+        price: Number(product.price),
+        imageUrl: product.imageUrl
+      });
+      if (typeof setToastMessage === 'function') {
+        setToastMessage(`Товар "${product.title}" додано до вибраного!`);
+      }
+    }
+
+    // Зберігаємо оновлений список в localStorage
+    localStorage.setItem('favorites', JSON.stringify(currentFavorites));
+
+    // Генеруємо подію для синхронізації (наприклад, щоб лічильник біля сердечка в хедері оновлювався)
+    window.dispatchEvent(new Event('favoritesUpdated'));
+  };
+  
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row relative">
 
@@ -117,9 +149,8 @@ const Shop = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${
-                  activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
+                  }`}
               >
                 {cat}
               </button>
@@ -176,64 +207,82 @@ const Shop = () => {
         </div>
 
         {/* СІТКА ТОВАРІВ */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="group flex flex-col items-center bg-white border border-gray-100 p-4 transition-all hover:border-gray-300 rounded-none">
+<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+  {filteredProducts.map((product) => {
+    // 🔍 1. Перевіряємо, чи є цей товар у списку вибраних (робимо це всередині map)
+    const isFavorite = JSON.parse(localStorage.getItem('favorites') || '[]')
+      .some(item => item.id === product.id);
 
-              {/* Зображення */}
-              <Link to={`/product/${product.id}`} className="w-full aspect-square mb-4 overflow-hidden flex items-center justify-center cursor-pointer">
-                <img
-                  src={product.imageUrl}
-                  alt={product.title}
-                  className="max-w-full max-h-full object-contain transition-transform duration-500 ease-in-out group-hover:scale-110"
-                />
-              </Link>
+    return (
+      <div key={product.id} className="group flex flex-col items-center bg-white border border-gray-100 p-4 transition-all hover:border-gray-300 rounded-none relative">
 
-              {/* Назва */}
-              <h3 className="text-center text-[10px] font-black uppercase tracking-widest mb-2 h-8 line-clamp-2 leading-tight hover:text-gray-600 transition-colors">
-                <Link to={`/product/${product.id}`}>
-                  {product.title}
-                </Link>
-              </h3>
+        {/* Зображення */}
+        <Link to={`/product/${product.id}`} className="w-full aspect-square mb-4 overflow-hidden flex items-center justify-center cursor-pointer">
+          <img
+            src={product.imageUrl}
+            alt={product.title}
+            className="max-w-full max-h-full object-contain transition-transform duration-500 ease-in-out group-hover:scale-110"
+          />
+        </Link>
 
-              <div className="w-10 h-[1px] bg-gray-200 mb-3"></div>
+        {/* Назва */}
+        <h3 className="text-center text-[10px] font-black uppercase tracking-widest mb-2 h-8 line-clamp-2 leading-tight hover:text-gray-600 transition-colors">
+          <Link to={`/product/${product.id}`}>
+            {product.title}
+          </Link>
+        </h3>
 
-              {/* Ціна */}
-              <div className="text-sm font-bold text-gray-900 mb-4 font-mono">
-                {product.price} <span className="text-[9px] font-normal font-sans">UAH</span>
-              </div>
+        <div className="w-10 h-[1px] bg-gray-200 mb-3"></div>
 
-              {/* КНОПКИ ДІЙ */}
-              <div className="flex space-x-2 w-full justify-center pt-2 border-t border-gray-50 mt-auto">
-                <button
-                  onClick={() => addToCart(product)}
-                  className="flex-1 h-9 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition active:scale-95 rounded-none"
-                >
-                  <span className="text-[10px] font-bold uppercase">В кошик</span>
-                </button>
-
-                <button className="w-9 h-9 border border-black flex items-center justify-center hover:bg-black hover:text-white transition rounded-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </button>
-              </div>
-
-            </div>
-          ))}
+        {/* Ціна */}
+        <div className="text-sm font-bold text-gray-900 mb-4 font-mono">
+          {product.price} <span className="text-[9px] font-normal font-sans">UAH</span>
         </div>
+
+        {/* КНОПКИ ДІЙ */}
+        <div className="flex space-x-2 w-full justify-center pt-2 border-t border-gray-50 mt-auto">
+          <button
+            onClick={() => addToCart(product)}
+            className="flex-1 h-9 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition active:scale-95 rounded-none"
+          >
+            <span className="text-[10px] font-bold uppercase">В кошик</span>
+          </button>
+
+          {/* 🔘 ОНОВЛЕНА КНОПКА FAVORITE */}
+          <button 
+            onClick={() => toggleFavorite(product)} // 👈 Додали клік
+            className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${
+              isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+            }`} // 👈 Динамічно змінюємо кольори: якщо вибрано — фон стає чорним
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="h-4 w-4" 
+              fill={isFavorite ? "currentColor" : "none"} // 👈 Якщо в вибраному — серце зафарбується повністю
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    );
+  })}
+</div>
       </main>
 
       {/* КАСТOМНИЙ TOAST В СТИЛІ БРУТАЛІЗМУ */}
       {toastMessage && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-4 animate-fade-in-up w-full max-w-md">
           <div className="bg-black text-white p-5 border border-gray-800 shadow-2xl rounded-none flex items-center justify-between relative">
-            
+
             {/* Текст сповіщення */}
             <p className="text-xs font-black uppercase tracking-wider text-center flex-1 pr-4 leading-relaxed">
               {toastMessage}
             </p>
-            
+
             {/* Кнопка закриття (✕) */}
             <button
               onClick={() => setToastMessage('')}
@@ -241,7 +290,7 @@ const Shop = () => {
             >
               ✕
             </button>
-            
+
           </div>
         </div>
       )}

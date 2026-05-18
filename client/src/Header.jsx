@@ -22,14 +22,14 @@ const Header = () => {
   const removeFromCart = (id) => {
     const updatedCart = cart.filter(item => item.id !== id);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
-    setCart(updatedCart); 
+    setCart(updatedCart);
     window.dispatchEvent(new Event('storage'));
   };
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const token = localStorage.getItem('token');
-  
+
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalSum = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -69,7 +69,7 @@ const Header = () => {
       if (response.ok) {
         // ✅ ЗАМІСТЬ alert() — ЧОРНИЙ СТИЛЬНИЙ TOAST
         showToast("Замовлення успішно оформлено!", "success");
-        
+
         localStorage.removeItem('cart');
         setCart([]);
         setIsCartOpen(false);
@@ -94,11 +94,25 @@ const Header = () => {
     window.dispatchEvent(new Event('storage'));
   };
 
+  const [favCount, setFavCount] = useState(0);
+
+  const updateFavCount = () => {
+    const saved = localStorage.getItem('favorites');
+    const favorites = saved ? JSON.parse(saved) : [];
+    setFavCount(favorites.length);
+  };
+
+  useEffect(() => {
+    updateFavCount();
+    // Слухаємо оновлення списку обраного
+    window.addEventListener('favoritesUpdated', updateFavCount);
+    return () => window.removeEventListener('favoritesUpdated', updateFavCount);
+  }, []);
   return (
     // ЗБІЛЬШЕНО ВИСОТУ ШАПКИ (py-5 замість py-4)
     <header className="w-full bg-white border-b border-gray-100 px-6 py-5 md:px-12 sticky top-0 z-50">
       <div className="w-full flex justify-between items-center">
-        
+
         {/* ЛІВИЙ КУТОК */}
         <div className="flex items-center space-x-8">
           {/* ЛОГОТИП ЗБІЛЬШЕНО: text-lg, font-black */}
@@ -109,11 +123,19 @@ const Header = () => {
 
         {/* ПРАВИЙ КУТОК */}
         <div className="flex items-center space-x-6">
-          
+          <Link
+            to="/favorites"
+            className="text-xs font-black uppercase tracking-widest text-red-600 hover:text-red-800 transition flex items-center space-x-1"
+          >
+            <span>Обране</span>
+            <span className="bg-red-100 px-1.5 py-0.5 text-[10px] font-mono border border-red-300 ml-1">
+              {favCount}
+            </span>
+          </Link>
           {/* Блок Кошика */}
           <div className="relative">
-            <button 
-              onClick={() => setIsCartOpen(!isCartOpen)} 
+            <button
+              onClick={() => setIsCartOpen(!isCartOpen)}
               className="p-1 text-gray-700 hover:text-black transition flex items-center relative"
             >
               {/* ІКОНКУ ЗБІЛЬШЕНО: h-6 w-6 */}
@@ -131,7 +153,7 @@ const Header = () => {
             {isCartOpen && (
               <div className="absolute right-0 mt-4 w-80 bg-white border border-gray-200 p-4 shadow-xl z-50 rounded-none">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2 mb-3">Ваш кошик</h3>
-                
+
                 {cart.length === 0 ? (
                   <p className="text-gray-400 text-xs text-center py-6 italic">Кошик порожній</p>
                 ) : (
@@ -143,8 +165,8 @@ const Header = () => {
                             <p className="text-xs font-bold uppercase truncate tracking-tight text-gray-900">{item.title}</p>
                             <p className="text-[11px] text-gray-500 font-mono mt-0.5">{item.quantity} шт. × {item.price} UAH</p>
                           </div>
-                          <button 
-                            onClick={() => removeFromCart(item.id)} 
+                          <button
+                            onClick={() => removeFromCart(item.id)}
                             className="text-gray-300 hover:text-black transition text-xs"
                           >
                             ✕
@@ -152,7 +174,7 @@ const Header = () => {
                         </div>
                       ))}
                     </div>
-                    
+
                     <div className="mt-4 pt-3 border-t border-gray-100">
                       <div className="flex justify-between items-baseline text-xs uppercase font-bold text-gray-900">
                         <span>Разом:</span>
@@ -161,21 +183,13 @@ const Header = () => {
 
                       <div className="space-y-2 mt-4">
                         {/* 🛒 Нова кнопка для переходу на повну сторінку кошика */}
-                        <Link 
+                        <Link
                           to="/cart"
                           onClick={() => setIsCartOpen(false)}
-                          className="flex items-center justify-center w-full h-10 bg-gray-100 text-black text-[10px] font-bold uppercase tracking-widest hover:bg-gray-200 transition border border-gray-300 rounded-none"
+                          className="flex items-center justify-center w-full h-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition border border-gray-300 rounded-none"
                         >
-                          Відкрити сторінку кошика
+                          Перейти до кошика
                         </Link>
-
-                        {/* Кнопка швидкого оформлення прямо з шапки */}
-                        <button 
-                          onClick={handleCheckout}
-                          className="w-full h-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition active:scale-95 rounded-none"
-                        >
-                          Швидке замовлення
-                        </button>
                       </div>
                     </div>
                   </>
@@ -187,8 +201,8 @@ const Header = () => {
           {/* Блок перевірки авторизації */}
           {token ? (
             <div className="flex items-center space-x-5 border-l border-gray-200 pl-5">
-              <Link 
-                to="/profile" 
+              <Link
+                to="/profile"
                 // ТЕКСТ ЗБІЛЬШЕНО ДО text-xs
                 className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-black transition flex items-center space-x-2.5"
               >
@@ -200,8 +214,8 @@ const Header = () => {
                 )}
                 <span>Кабінет</span>
               </Link>
-              <button 
-                onClick={handleLogout} 
+              <button
+                onClick={handleLogout}
                 // КНОПКУ "ВИЙТИ" ТАКОЖ ЗБІЛЬШЕНО ДО text-xs
                 className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700 transition"
               >

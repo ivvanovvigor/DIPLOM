@@ -184,6 +184,36 @@ app.get('/api/orders/user/:userId', async (req, res) => {
   }
 });
 
+// Маршрут для скасування замовлення через головний екземпляр додатка (app)
+app.patch('/api/orders/:id/cancel', async (req, res) => {
+  // Перетворюємо id замовлення з URL-рядка у число
+  const orderId = parseInt(req.params.id);
+
+  try {
+    // 1. Шукаємо замовлення в базі даних через Prisma
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    // Якщо такого замовлення немає — повертаємо клієнту 404 помилку
+    if (!order) {
+      return res.status(404).json({ message: 'Замовлення не знайдено' });
+    }
+
+    // 2. Оновлюємо статус замовлення на 'cancelled'
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'cancelled' },
+    });
+
+    // Відправляємо успішну відповідь на фронтенд
+    res.json({ message: 'Замовлення успішно скасовано', order: updatedOrder });
+  } catch (error) {
+    console.error('Помилка на бекенді при скасуванні:', error);
+    res.status(500).json({ message: 'Внутрішня помилка сервера при скасуванні замовлення' });
+  }
+});
+
 // Запуск сервера
 app.listen(PORT, () => {
   console.log(`🚀 Сервер працює на порту ${PORT}`);
