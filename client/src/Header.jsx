@@ -1,49 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext'; // ✅ ІМПОРТУЄМО НАШ ХУК ТОСТІВ
 
-const Header = () => {
+// 🛒 Приймаємо хмарні cartItems, favoriteItems та функцію видалення прямо з пропсів App.jsx
+const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
   const navigate = useNavigate();
   const { showToast } = useToast(); // ✅ ІНІЦІАЛІЗУЄМО КОНТЕКСТ СПОВІЩЕНЬ
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cart, setCart] = useState([]);
-
-  const updateCart = () => {
-    const savedCart = localStorage.getItem('cart');
-    setCart(savedCart ? JSON.parse(savedCart) : []);
-  };
-
-  useEffect(() => {
-    updateCart();
-    window.addEventListener('storage', updateCart);
-    return () => window.removeEventListener('storage', updateCart);
-  }, []);
-
-  const removeFromCart = (id) => {
-    const updatedCart = cart.filter(item => item.id !== id);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
-    setCart(updatedCart);
-    window.dispatchEvent(new Event('storage'));
-  };
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const token = localStorage.getItem('token');
 
-  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalSum = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // 🎒 Динамічно рахуємо дані на основі хмарного стейту кошика
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Динамічно рахуємо кількість елементів в обраному на основі пропса з бази даних
+  const favCount = favoriteItems.length;
+
+  // Автоматична адаптація суми під структуру Prisma (item.price або item.product.price)
+  const totalSum = cartItems.reduce((sum, item) => {
+    const price = item.price || (item.product ? item.product.price : 0);
+    return sum + (price * item.quantity);
+  }, 0);
 
   // 🚀 МОДЕРНІЗОВАНА ФУНКЦІЯ ОФОРМЛЕННЯ ЗАМОВЛЕННЯ З TOAST
   const handleCheckout = async () => {
     if (!user || !token) {
-      // ✅ Замінено alert на червоний тост
       showToast("Будь ласка, увійдіть в систему для оформлення замовлення", "error");
       navigate('/login');
       return;
     }
 
-    if (cart.length === 0) {
-      // ✅ Замінено alert на червоний тост
+    if (cartItems.length === 0) {
       showToast("Ваш кошик порожній", "error");
       return;
     }
@@ -58,64 +47,46 @@ const Header = () => {
         body: JSON.stringify({
           userId: Number(user.id),
           totalAmount: Number(totalSum),
-          cartItems: cart.map(item => ({
-            id: item.id,
+          cartItems: cartItems.map(item => ({
+            id: item.productId || item.id,
             quantity: item.quantity,
-            price: item.price
+            price: item.price || (item.product ? item.product.price : 0)
           }))
         })
       });
 
       if (response.ok) {
-        // ✅ ЗАМІСТЬ alert() — ЧОРНИЙ СТИЛЬНИЙ TOAST
         showToast("Замовлення успішно оформлено!", "success");
-
-        localStorage.removeItem('cart');
-        setCart([]);
         setIsCartOpen(false);
+
+        // Викликаємо подію для повної синхронізації фронтенду (перечитування кошика з сервера)
         window.dispatchEvent(new Event('storage'));
         navigate('/profile');
       } else {
         const errorData = await response.json();
-        // ✅ Помилка сервера — брутальний червоний тост
         showToast(`Помилка: ${errorData.message || 'Не вдалося оформити'}`, "error");
       }
     } catch (error) {
       console.error("Помилка відправки:", error);
-      // ✅ Помилка з'єднання — червоний тост
       showToast("Не вдалося зв'язатися з сервером", "error");
     }
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    setCart([]);
-    navigate('/login');
-    window.dispatchEvent(new Event('storage'));
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    // Чистимо кошик та обране з пам'яті для повної безпеки
+    localStorage.removeItem('cart');
+    localStorage.removeItem('favorites');
+    window.location.href = '/login';
   };
 
-  const [favCount, setFavCount] = useState(0);
-
-  const updateFavCount = () => {
-    const saved = localStorage.getItem('favorites');
-    const favorites = saved ? JSON.parse(saved) : [];
-    setFavCount(favorites.length);
-  };
-
-  useEffect(() => {
-    updateFavCount();
-    // Слухаємо оновлення списку обраного
-    window.addEventListener('favoritesUpdated', updateFavCount);
-    return () => window.removeEventListener('favoritesUpdated', updateFavCount);
-  }, []);
   return (
-    // ЗБІЛЬШЕНО ВИСОТУ ШАПКИ (py-5 замість py-4)
     <header className="w-full bg-white border-b border-gray-100 px-6 py-5 md:px-12 sticky top-0 z-50">
       <div className="w-full flex justify-between items-center">
 
         {/* ЛІВИЙ КУТОК */}
         <div className="flex items-center space-x-8">
-          {/* ЛОГОТИП ЗБІЛЬШЕНО: text-lg, font-black */}
           <Link to="/shop" className="text-lg font-black uppercase tracking-widest text-blue-600 hover:opacity-80 transition">
             MOTO STORE
           </Link>
@@ -132,13 +103,13 @@ const Header = () => {
               {favCount}
             </span>
           </Link>
+
           {/* Блок Кошика */}
           <div className="relative">
             <button
               onClick={() => setIsCartOpen(!isCartOpen)}
               className="p-1 text-gray-700 hover:text-black transition flex items-center relative"
             >
-              {/* ІКОНКУ ЗБІЛЬШЕНО: h-6 w-6 */}
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z" />
               </svg>
@@ -154,25 +125,31 @@ const Header = () => {
               <div className="absolute right-0 mt-4 w-80 bg-white border border-gray-200 p-4 shadow-xl z-50 rounded-none">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2 mb-3">Ваш кошик</h3>
 
-                {cart.length === 0 ? (
+                {cartItems.length === 0 ? (
                   <p className="text-gray-400 text-xs text-center py-6 italic">Кошик порожній</p>
                 ) : (
                   <>
                     <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
-                      {cart.map((item) => (
-                        <div key={item.id} className="flex justify-between items-start py-1 border-b border-gray-50 last:border-none">
-                          <div className="flex-1 min-w-0 pr-2">
-                            <p className="text-xs font-bold uppercase truncate tracking-tight text-gray-900">{item.title}</p>
-                            <p className="text-[11px] text-gray-500 font-mono mt-0.5">{item.quantity} шт. × {item.price} UAH</p>
+                      {cartItems.map((item) => {
+                        const itemTitle = item.title || (item.product ? item.product.title : 'Товар');
+                        const itemPrice = item.price || (item.product ? item.product.price : 0);
+                        const itemId = item.id;
+
+                        return (
+                          <div key={itemId} className="flex justify-between items-start py-1 border-b border-gray-50 last:border-none">
+                            <div className="flex-1 min-w-0 pr-2">
+                              <p className="text-xs font-bold uppercase truncate tracking-tight text-gray-900">{itemTitle}</p>
+                              <p className="text-[11px] text-gray-500 font-mono mt-0.5">{item.quantity} шт. × {itemPrice} UAH</p>
+                            </div>
+                            <button
+                              onClick={() => removeFromCart && removeFromCart(itemId)}
+                              className="text-gray-300 hover:text-black transition text-xs"
+                            >
+                              ✕
+                            </button>
                           </div>
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-gray-300 hover:text-black transition text-xs"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-gray-100">
@@ -182,14 +159,19 @@ const Header = () => {
                       </div>
 
                       <div className="space-y-2 mt-4">
-                        {/* 🛒 Нова кнопка для переходу на повну сторінку кошика */}
                         <Link
                           to="/cart"
                           onClick={() => setIsCartOpen(false)}
-                          className="flex items-center justify-center w-full h-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition border border-gray-300 rounded-none"
+                          className="flex items-center justify-center w-full h-10 bg-white text-black text-[10px] font-bold uppercase tracking-widest hover:bg-gray-50 transition border border-black rounded-none"
                         >
                           Перейти до кошика
                         </Link>
+                        <button
+                          onClick={handleCheckout}
+                          className="flex items-center justify-center w-full h-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition rounded-none"
+                        >
+                          Оформити замовлення
+                        </button>
                       </div>
                     </div>
                   </>
@@ -203,10 +185,8 @@ const Header = () => {
             <div className="flex items-center space-x-5 border-l border-gray-200 pl-5">
               <Link
                 to="/profile"
-                // ТЕКСТ ЗБІЛЬШЕНО ДО text-xs
                 className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-black transition flex items-center space-x-2.5"
               >
-                {/* АВАТАРКУ ЗБІЛЬШЕНО: w-7 h-7 */}
                 {user && user.fullName && (
                   <span className="w-7 h-7 bg-gray-100 text-black flex items-center justify-center font-black rounded-none text-[10px] border border-gray-200">
                     {user.fullName.charAt(0).toUpperCase()}
@@ -216,7 +196,6 @@ const Header = () => {
               </Link>
               <button
                 onClick={handleLogout}
-                // КНОПКУ "ВИЙТИ" ТАКОЖ ЗБІЛЬШЕНО ДО text-xs
                 className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700 transition"
               >
                 Вийти

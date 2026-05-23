@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const Shop = () => {
+// ⚡ Приймаємо дані та функції хмарного кошика й обраного з пропсів App.jsx
+const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
 
@@ -30,20 +31,16 @@ const Shop = () => {
   useEffect(() => {
     let result = [...products];
 
-    // 1. Фільтрація за категорією
     if (activeCategory !== 'Всі') {
       result = result.filter(p => p.category === activeCategory);
     }
 
-    // 2. Фільтрація за пошуком
     if (searchQuery) {
       result = result.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
-    // 3. Фільтрація за ціною
     result = result.filter(p => p.price <= priceRange);
 
-    // 4. СОРТУВАННЯ
     if (sortBy === 'low-to-high') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'high-to-low') {
@@ -55,7 +52,6 @@ const Shop = () => {
     setFilteredProducts(result);
   }, [searchQuery, activeCategory, priceRange, sortBy, products]);
 
-  // Таймер для автоматичного закриття сповіщення
   useEffect(() => {
     if (toastMessage) {
       const timer = setTimeout(() => {
@@ -65,62 +61,28 @@ const Shop = () => {
     }
   }, [toastMessage]);
 
-  // ФУНКЦІЯ ДОДАВАННЯ В КОШИК (З використанням Toast замість alert)
-  const addToCart = (product) => {
-    const savedCart = localStorage.getItem('cart');
-    let currentCart = savedCart ? JSON.parse(savedCart) : [];
-
-    const existingProductIndex = currentCart.findIndex(item => item.id === product.id);
-
-    if (existingProductIndex > -1) {
-      currentCart[existingProductIndex].quantity += 1;
-    } else {
-      currentCart.push({
-        id: product.id,
-        title: product.title,
-        price: Number(product.price),
-        quantity: 1,
-        imageUrl: product.imageUrl
-      });
+  // Проксі-функція для виклику хмарного додавання до кошика та відображення тосту
+  const handleAddToCartClick = async (product) => {
+    if (addToCart) {
+      await addToCart(product);
+      setToastMessage(`Товар "${product.title}" додано до кошика!`);
     }
-
-    localStorage.setItem('cart', JSON.stringify(currentCart));
-    window.dispatchEvent(new Event('storage'));
-
-    // Активуємо гарний стейт замість системного вікна
-    setToastMessage(`Товар "${product.title}" додано до кошика!`);
   };
 
-  const toggleFavorite = (product) => {
-    const savedFavorites = localStorage.getItem('favorites');
-    let currentFavorites = savedFavorites ? JSON.parse(savedFavorites) : [];
-
-    const existingIndex = currentFavorites.findIndex(item => item.id === product.id);
-
-    if (existingIndex > -1) {
-      // Якщо товар уже є у вибраному — видаляємо його (при повторному кліку)
-      currentFavorites.splice(existingIndex, 1);
-      if (typeof setToastMessage === 'function') {
+  // 🚀 Проксі-функція для перемикання хмарного ОБРАНОГО з відображенням тосту
+  const handleToggleFavoriteClick = async (product) => {
+    if (toggleFavorite) {
+      // Визначаємо поточний стан об'єкта, дивимось чи він уже був у базі
+      const isCurrentlyFavorite = favoriteItems.some(item => item.id === product.id);
+      
+      await toggleFavorite(product);
+      
+      if (isCurrentlyFavorite) {
         setToastMessage(`Товар "${product.title}" видалено з вибраного`);
-      }
-    } else {
-      // Якщо товару немає — додаємо об'єкт (не забуваємо про imageUrl, який ми чинили)
-      currentFavorites.push({
-        id: product.id,
-        title: product.title,
-        price: Number(product.price),
-        imageUrl: product.imageUrl
-      });
-      if (typeof setToastMessage === 'function') {
+      } else {
         setToastMessage(`Товар "${product.title}" додано до вибраного!`);
       }
     }
-
-    // Зберігаємо оновлений список в localStorage
-    localStorage.setItem('favorites', JSON.stringify(currentFavorites));
-
-    // Генеруємо подію для синхронізації (наприклад, щоб лічильник біля сердечка в хедері оновлювався)
-    window.dispatchEvent(new Event('favoritesUpdated'));
   };
   
   return (
@@ -130,7 +92,6 @@ const Shop = () => {
       <aside className="w-full md:w-64 bg-gray-50 border-r border-gray-100 p-6 flex-shrink-0">
         <h2 className="text-lg font-black uppercase tracking-tight mb-8">Фільтри</h2>
 
-        {/* Пошук */}
         <div className="mb-6">
           <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Пошук</label>
           <input
@@ -141,7 +102,6 @@ const Shop = () => {
           />
         </div>
 
-        {/* Категорії */}
         <div className="mb-6">
           <label className="block text-[10px] font-bold uppercase text-gray-400 mb-4">Категорії</label>
           <div className="space-y-1">
@@ -149,8 +109,9 @@ const Shop = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
-                  }`}
+                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${
+                  activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
+                }`}
               >
                 {cat}
               </button>
@@ -158,7 +119,6 @@ const Shop = () => {
           </div>
         </div>
 
-        {/* Повзунок ціни */}
         <div className="mb-8">
           <label className="block text-[10px] font-bold uppercase text-gray-400 mb-4">
             Ціна до: <span className="text-black">{priceRange} грн</span>
@@ -171,7 +131,6 @@ const Shop = () => {
           />
         </div>
 
-        {/* Кнопка скидання */}
         <button
           onClick={() => { setSearchQuery(''); setActiveCategory('Всі'); setPriceRange(40000); setSortBy('default'); }}
           className="w-full py-2 text-[10px] font-bold uppercase border border-black hover:bg-black hover:text-white transition rounded-none"
@@ -180,17 +139,15 @@ const Shop = () => {
         </button>
       </aside>
 
-      {/* MAIN CONTENT (Каталог товарів) */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 p-6 md:p-10">
 
-        {/* ХЕДЕР КАТАЛОГУ */}
         <div className="flex flex-col sm:flex-row justify-between items-baseline border-b border-gray-100 pb-4 mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-black uppercase tracking-tighter">Каталог</h1>
             <span className="text-gray-400 text-xs font-mono">Знайдено: {filteredProducts.length}</span>
           </div>
 
-          {/* БЛОК СОРТУВАННЯ */}
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
             <label className="text-[10px] font-bold uppercase text-gray-400 whitespace-nowrap">Сортувати:</label>
             <select
@@ -207,90 +164,77 @@ const Shop = () => {
         </div>
 
         {/* СІТКА ТОВАРІВ */}
-<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-  {filteredProducts.map((product) => {
-    // 🔍 1. Перевіряємо, чи є цей товар у списку вибраних (робимо це всередині map)
-    const isFavorite = JSON.parse(localStorage.getItem('favorites') || '[]')
-      .some(item => item.id === product.id);
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {filteredProducts.map((product) => {
+            // 🚀 Перевірка статусу «В обраному» тепер йде через реактивний масив, отриманий з бази PostgreSQL/Neon
+            const isFavorite = favoriteItems.some(item => item.id === product.id);
 
-    return (
-      <div key={product.id} className="group flex flex-col items-center bg-white border border-gray-100 p-4 transition-all hover:border-gray-300 rounded-none relative">
+            return (
+              <div key={product.id} className="group flex flex-col items-center bg-white border border-gray-100 p-4 transition-all hover:border-gray-300 rounded-none relative">
 
-        {/* Зображення */}
-        <Link to={`/product/${product.id}`} className="w-full aspect-square mb-4 overflow-hidden flex items-center justify-center cursor-pointer">
-          <img
-            src={product.imageUrl}
-            alt={product.title}
-            className="max-w-full max-h-full object-contain transition-transform duration-500 ease-in-out group-hover:scale-110"
-          />
-        </Link>
+                <Link to={`/product/${product.id}`} className="w-full aspect-square mb-4 overflow-hidden flex items-center justify-center cursor-pointer">
+                  <img
+                    src={product.imageUrl}
+                    alt={product.title}
+                    className="max-w-full max-h-full object-contain transition-transform duration-500 ease-in-out group-hover:scale-110"
+                  />
+                </Link>
 
-        {/* Назва */}
-        <h3 className="text-center text-[10px] font-black uppercase tracking-widest mb-2 h-8 line-clamp-2 leading-tight hover:text-gray-600 transition-colors">
-          <Link to={`/product/${product.id}`}>
-            {product.title}
-          </Link>
-        </h3>
+                <h3 className="text-center text-[10px] font-black uppercase tracking-widest mb-2 h-8 line-clamp-2 leading-tight hover:text-gray-600 transition-colors">
+                  <Link to={`/product/${product.id}`}>{product.title}</Link>
+                </h3>
 
-        <div className="w-10 h-[1px] bg-gray-200 mb-3"></div>
+                <div className="w-10 h-[1px] bg-gray-200 mb-3"></div>
 
-        {/* Ціна */}
-        <div className="text-sm font-bold text-gray-900 mb-4 font-mono">
-          {product.price} <span className="text-[9px] font-normal font-sans">UAH</span>
+                <div className="text-sm font-bold text-gray-900 mb-4 font-mono">
+                  {product.price} <span className="text-[9px] font-normal font-sans">UAH</span>
+                </div>
+
+                <div className="flex space-x-2 w-full justify-center pt-2 border-t border-gray-50 mt-auto">
+                  <button
+                    onClick={() => handleAddToCartClick(product)}
+                    className="flex-1 h-9 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition active:scale-95 rounded-none"
+                  >
+                    <span className="text-[10px] font-bold uppercase">В кошик</span>
+                  </button>
+
+                  <button 
+                    onClick={() => handleToggleFavoriteClick(product)}
+                    className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${
+                      isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                    }`}
+                  >
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="h-4 w-4" 
+                      fill={isFavorite ? "currentColor" : "none"}
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                </div>
+
+              </div>
+            );
+          })}
         </div>
-
-        {/* КНОПКИ ДІЙ */}
-        <div className="flex space-x-2 w-full justify-center pt-2 border-t border-gray-50 mt-auto">
-          <button
-            onClick={() => addToCart(product)}
-            className="flex-1 h-9 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition active:scale-95 rounded-none"
-          >
-            <span className="text-[10px] font-bold uppercase">В кошик</span>
-          </button>
-
-          {/* 🔘 ОНОВЛЕНА КНОПКА FAVORITE */}
-          <button 
-            onClick={() => toggleFavorite(product)} // 👈 Додали клік
-            className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${
-              isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-            }`} // 👈 Динамічно змінюємо кольори: якщо вибрано — фон стає чорним
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-4 w-4" 
-              fill={isFavorite ? "currentColor" : "none"} // 👈 Якщо в вибраному — серце зафарбується повністю
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
-        </div>
-
-      </div>
-    );
-  })}
-</div>
       </main>
 
-      {/* КАСТOМНИЙ TOAST В СТИЛІ БРУТАЛІЗМУ */}
+      {/* КАСТOМНИЙ TOAST */}
       {toastMessage && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-4 animate-fade-in-up w-full max-w-md">
           <div className="bg-black text-white p-5 border border-gray-800 shadow-2xl rounded-none flex items-center justify-between relative">
-
-            {/* Текст сповіщення */}
             <p className="text-xs font-black uppercase tracking-wider text-center flex-1 pr-4 leading-relaxed">
               {toastMessage}
             </p>
-
-            {/* Кнопка закриття (✕) */}
             <button
               onClick={() => setToastMessage('')}
               className="text-gray-400 hover:text-white text-sm font-mono p-1 transition-colors flex-shrink-0"
             >
               ✕
             </button>
-
           </div>
         </div>
       )}

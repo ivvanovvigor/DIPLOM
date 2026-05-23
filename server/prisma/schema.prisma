@@ -10,12 +10,14 @@ datasource db {
 
 // МОДЕЛЬ КОРИСТУВАЧА
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  passwordHash  String
-  fullName  String
-  orders    Order[] // Один користувач — багато замовлень
-  createdAt DateTime @default(now())
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  fullName     String
+  orders       Order[] // Один користувач — багато замовлень
+  createdAt    DateTime   @default(now())
+  cartItems    CartItem[]
+  favorites    FavoriteItem[]
 }
 
 // МОДЕЛЬ ТОВАРУ
@@ -27,10 +29,11 @@ model Product {
   imageUrl    String?
   category    String      @default("Запчастини")
   createdAt   DateTime    @default(now())
-  specs       Json?     
-  views       Int         @default(0)  
-  
-  orderItems  OrderItem[] 
+  specs       Json?
+  views       Int         @default(0)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  favoriteBy   FavoriteItem[]
 }
 
 // МОДЕЛЬ ЗАМОВЛЕННЯ
@@ -61,4 +64,25 @@ model OrderItem {
   // Зв'язок із товаром
   productId Int
   product   Product @relation(fields: [productId], references: [id])
+}
+
+model CartItem {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade) // ✅ Додали зв'язок з продуктом
+
+  quantity Int @default(1)
+}
+
+model FavoriteItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // Один і той самий товар не можна додати в обране двічі
 }

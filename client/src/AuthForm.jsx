@@ -32,8 +32,9 @@ const AuthForm = ({ mode }) => {
           // ✅ ЗАМІСТЬ СИСТЕМНОГО ALERT — КРАСИВИЙ ЧОРНИЙ TOAST
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
   
-          // Оновлюємо інтерфейс шапки
+          // Оновлюємо інтерфейс шапки (кошик та обране)
           window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new Event('favoritesUpdated'));
           
           // ⏳ Даємо 1.5 секунди користувачу помилуватися тостом перед редиректом
           setTimeout(() => {
@@ -41,6 +42,12 @@ const AuthForm = ({ mode }) => {
           }, 1500);
 
         } else {
+          // 🔄 Перед реєстрацією нового юзера про всяк випадок чистимо старі хвости
+          localStorage.removeItem('cart');
+          localStorage.removeItem('favorites');
+          window.dispatchEvent(new Event('storage'));
+          window.dispatchEvent(new Event('favoritesUpdated'));
+
           // ✅ ЗАМІСТЬ СИСТЕМНОГО ALERT — ЧОРНИЙ TOAST ДЛЯ РЕЄСТРАЦІЇ
           showToast('Реєстрація успішна! Тепер увійдіть.', 'success');
           

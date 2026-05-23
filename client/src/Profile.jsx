@@ -9,17 +9,28 @@ const Profile = () => {
   const [orderToCancel, setOrderToCancel] = useState(null);
 
   useEffect(() => {
-    if (user && user.id) {
-      fetch(`http://localhost:5000/api/orders/user/${user.id}`)
-        .then(res => res.json())
-        .then(data => {
-          setOrders(Array.isArray(data) ? data : []);
-        })
-        .catch(err => console.error("Помилка завантаження замовлень:", err));
-    }
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    // Викликаємо новий безпечний ендпоінт, де сервер сам витягне юзера з токена
+    fetch('http://localhost:5000/api/orders/my', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Не вдалося завантажити замовлення');
+        return res.json();
+      })
+      .then(data => {
+        setOrders(Array.isArray(data) ? data : []);
+      })
+      .catch(err => console.error("Помилка завантаження замовлень:", err));
   }, []);
 
-  // 1. Коли користувач тицяє "Скасувати", ми не викликаємо confirm, а просто відкриваємо модалку
+  // 1. Коли користувач тицяє "Скасувати", ми відкриваємо модалку
   const openCancelModal = (orderId) => {
     setOrderToCancel(orderId);
     setIsModalOpen(true);
@@ -28,11 +39,13 @@ const Profile = () => {
   // 2. Функція, яка спрацьовує, якщо користувач підтвердив скасування у нашій модалці
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
+    const token = localStorage.getItem('token');
 
     try {
       const response = await fetch(`http://localhost:5000/api/orders/${orderToCancel}/cancel`, {
         method: 'PATCH',
         headers: {
+          'Authorization': `Bearer ${token}`, // Обов'язково додаємо токен сюди також!
           'Content-Type': 'application/json',
         }
       });

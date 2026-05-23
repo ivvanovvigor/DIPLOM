@@ -1,45 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-const Favorites = ({ addToCart }) => {
-  const [favorites, setFavorites] = useState([]);
-
-  // Завантажуємо дані при старті сторінки
-  useEffect(() => {
-    const saved = localStorage.getItem('favorites');
-    setFavorites(saved ? JSON.parse(saved) : []);
-  }, []);
-
-  // Видалення зі сторінки вибраного
-  const removeFavorite = (id) => {
-    const updated = favorites.filter(item => item.id !== id);
-    setFavorites(updated);
-    localStorage.setItem('favorites', JSON.stringify(updated));
-    window.dispatchEvent(new Event('favoritesUpdated'));
-  };
+// ⚡ Приймаємо хмарні дані та функції з пропсів App.jsx
+const Favorites = ({ favoriteItems = [], toggleFavorite, addToCart }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-6xl mx-auto">
+        {/* Кількість товарів тепер вираховується з хмарного масиву */}
         <h1 className="text-xl font-black uppercase tracking-widest mb-8 text-gray-900 border-b border-black pb-3">
-          Вибрані товари ({favorites.length})
+          Вибрані товари ({favoriteItems.length})
         </h1>
 
-        {favorites.length === 0 ? (
+        {favoriteItems.length === 0 ? (
           <div className="bg-white p-12 border border-black text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <p className="text-sm text-gray-500 font-medium mb-4">Ваш список вибраного порожній.</p>
-            <a href="/shop" className="inline-block bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition rounded-none">
+            {/* Використовуємо Link замість <a> для швидкого роутингу без перезавантаження */}
+            <Link to="/shop" className="inline-block bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition rounded-none">
               Перейти до каталогу
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {favorites.map(product => (
+            {favoriteItems.map(product => (
               <div key={product.id} className="bg-white border border-gray-300 p-6 flex flex-col justify-between relative ">
                 
-                {/* Кнопка швидкого видалення*/}
+                {/* Кнопка швидкого видалення (викликає toggleFavorite, який видалить товар з бази) */}
                 <button 
-                  onClick={() => removeFavorite(product.id)}
-                  className="absolute top-1 right-2 text-gray-400 hover:text-black font-bold text-sm"
+                  onClick={() => toggleFavorite(product)}
+                  className="absolute top-1 right-2 text-gray-400 hover:text-black font-bold text-sm p-1 transition-colors"
                 >
                   ✕
                 </button>
@@ -63,7 +52,7 @@ const Favorites = ({ addToCart }) => {
                     {product.title}
                   </h3>
                   <p className="text-sm font-mono font-black text-black mt-1">
-                    {product.price} UAH
+                    {Number(product.price).toFixed(2)} UAH
                   </p>
                 </div>
 
