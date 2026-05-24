@@ -8,7 +8,7 @@ import ProductDetails from './ProductDetails';
 import Cart from './Cart';
 import Favorites from './Favorites';
 
-const API_URL = '${import.meta.env.VITE_API_URL}/api';
+const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 function App() {
   // 🔐 Робимо статус авторизації реактивним стейтом

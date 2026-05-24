@@ -13,7 +13,7 @@ const Profile = () => {
     if (!token) return;
 
     // Викликаємо новий безпечний ендпоінт, де сервер сам витягне юзера з токена
-    fetch('${import.meta.env.VITE_API_URL}/api/orders/my', {
+    fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
