@@ -12,13 +12,26 @@ const AuthForm = ({ mode }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Базова перевірка загального формату (наявність @ та крапки)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       showToast("Введіть коректний формат email (наприклад, user@example.com)", "error");
-      return; // Зупиняємо відправку запиту на сервер
+      return;
     }
 
-    // Перевірка довжини пароля (теж корисно для захисту)
+    // Перевірка на реальні дозволені домени
+    // Виділяємо все, що йде після символу "@" і переводимо в нижній регістр
+    const emailDomain = formData.email.split('@')[1].toLowerCase();
+
+    // Список «білих» реальних доменів, які дозволені на сайті
+    const allowedDomains = ['gmail.com', 'ukr.net', 'yahoo.com', 'outlook.com', 'icloud.com'];
+
+    if (!allowedDomains.includes(emailDomain)) {
+      showToast("Реєстрація дозволена тільки для пошт: Gmail, Ukr.net, Outlook, Yahoo, iCloud", "error");
+      return; // Блокуємо відправку на сервер
+    }
+
+    // Довжина пароля (щоб не реєстрували акаунти з паролем "1")
     if (formData.password.length < 6) {
       showToast("Пароль має бути не менше 6 символів", "error");
       return;
