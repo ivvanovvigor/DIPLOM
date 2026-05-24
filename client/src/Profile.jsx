@@ -13,7 +13,7 @@ const Profile = () => {
     if (!token) return;
 
     // Викликаємо новий безпечний ендпоінт, де сервер сам витягне юзера з токена
-    fetch('http://localhost:5000/api/orders/my', {
+    fetch('${import.meta.env.VITE_API_URL}/api/orders/my', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -42,7 +42,7 @@ const Profile = () => {
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderToCancel}/cancel`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${orderToCancel}/cancel`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`, // Обов'язково додаємо токен сюди також!

@@ -51,7 +51,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/orders', {
+      const response = await fetch('${import.meta.env.VITE_API_URL}/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                       <div className="w-16 h-16 bg-gray-100 border border-gray-200 flex items-center justify-center font-black text-gray-400 text-xs flex-shrink-0 overflow-hidden">
                         {itemImageUrl ? (
                           <img
-                            src={itemImageUrl.startsWith('http') ? itemImageUrl : `http://localhost:5000${itemImageUrl}`}
+                            src={itemImageUrl.startsWith('http') ? itemImageUrl : `${import.meta.env.VITE_API_URL}${itemImageUrl}`}
                             alt={itemTitle}
                             className="w-full h-full object-cover"
                             onError={(e) => {

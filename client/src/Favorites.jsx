@@ -37,7 +37,7 @@ const Favorites = ({ favoriteItems = [], toggleFavorite, addToCart }) => {
                 <div className="w-full h-40 bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden mb-4">
                   {product.imageUrl ? (
                     <img 
-                      src={product.imageUrl.startsWith('http') ? product.imageUrl : `http://localhost:5000${product.imageUrl}`} 
+                      src={product.imageUrl.startsWith('http') ? product.imageUrl : `${import.meta.env.VITE_API_URL}${product.imageUrl}`} 
                       alt={product.title} 
                       className="max-w-full max-h-full object-contain"
                     />
