@@ -38,7 +38,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
     }
 
     try {
-      const response = await fetch('${import.meta.env.VITE_API_URL}/api/orders', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
