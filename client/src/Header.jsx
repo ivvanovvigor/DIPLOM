@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useToast } from './ToastContext'; // ✅ ІМПОРТУЄМО НАШ ХУК ТОСТІВ
-import { useAuth } from './AuthContext';   // ✅ ІМПОРТУЄМО НАШ КОНТЕКСТ АВТОРИЗАЦІЇ
+import { useToast } from './ToastContext'; // ІМПОРТ ХУКА ТОСТІВ
+import { useAuth } from './AuthContext';   // ІМПОРТ КОНТЕКСТУ АВТОРИЗАЦІЇ
 
-// 🛒 Приймаємо хмарні cartItems, favoriteItems та функцію видалення прямо з пропсів App.jsx
-const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
+// Додано clearCart у пропси для очищення стану кошика після замовлення
+const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart }) => {
   const navigate = useNavigate();
-  const { showToast } = useToast(); // ✅ ІНІЦІАЛІЗУЄМО КОНТЕКСТ СПОВІЩЕНЬ
+  const { showToast } = useToast(); 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // 🔐 БЕРЕМО ДАНІ АВТОРИЗАЦІЇ З ГЛОБАЛЬНОГО СТЕЙТУ ЗАМІСТЬ LOCALSTORAGE
+  // БЕРЕМО ДАНІ АВТОРИЗАЦІЇ З ГЛОБАЛЬНОГО СТЕЙТУ
   const { user, token, logout } = useAuth();
 
-  // 🎒 Динамічно рахуємо дані на основі хмарного стейту кошика
+  // Динамічно рахуємо дані на основі хмарного стейту кошика
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // Динамічно рахуємо кількість елементів в обраному на основі пропса з бази даних
@@ -24,7 +24,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
     return sum + (price * item.quantity);
   }, 0);
 
-  // 🚀 МОДЕРНІЗОВАНА ФУНКЦІЯ ОФОРМЛЕННЯ ЗАМОВЛЕННЯ З TOAST
+  // МОДЕРНІЗОВАНА ФУНКЦІЯ ОФОРМЛЕННЯ ЗАМОВЛЕННЯ З TOAST
   const handleCheckout = async () => {
     if (!user || !token) {
       showToast("Будь ласка, увійдіть в систему для оформлення замовлення", "error");
@@ -38,7 +38,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,8 +59,14 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
         showToast("Замовлення успішно оформлено!", "success");
         setIsCartOpen(false);
 
-        // Викликаємо подію для повної синхронізації фронтенду (перечитування кошика з сервера)
-        window.dispatchEvent(new Event('storage'));
+        // ВИПРАВЛЕНО: Викликаємо функцію очищення локального стейту кошика, якщо вона передана
+        if (clearCart) {
+          clearCart();
+        } else {
+          localStorage.removeItem('cart');
+          window.dispatchEvent(new Event('storage'));
+        }
+        
         navigate('/profile');
       } else {
         const errorData = await response.json();
@@ -72,11 +78,11 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
     }
   };
 
-  // 🚪 М'ЯКИЙ ВИХІД ЧЕРЕЗ AUTHCONTEXT З ПЛАВНИМ РЕДІРЕКТОМ
+  // М'ЯКИЙ ВИХІД ЧЕРЕЗ AUTHCONTEXT З ПЛАВНИМ РЕДІРЕКТОМ
   const handleLogoutClick = () => {
-    logout(); // Очистить стейт та localStorage всередині провайдера
+    logout(); 
     showToast("Ви успішно вийшли з системи", "success");
-    navigate('/login'); // Переходимо без жорсткого перезавантаження сторінки
+    navigate('/login'); 
   };
 
   return (
@@ -85,7 +91,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
 
         {/* ЛІВИЙ КУТОК */}
         <div className="flex items-center space-x-8">
-          <Link to="/shop" className="text-lg font-black uppercase tracking-widest text-blue-600 hover:opacity-80 transition">
+          <Link to="/" className="text-lg font-black uppercase tracking-widest text-black hover:opacity-80 transition">
             MOTO STORE
           </Link>
         </div>
@@ -96,7 +102,6 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
             to="/favorites"
             className="text-xs font-black uppercase tracking-widest text-black hover:opacity-70 transition flex items-center space-x-1"
           >
-            {/* Красиве чорне зафарбоване SVG-серце замість червоного емодзі */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6 fill-black text-black inline-block mr-1"
@@ -107,7 +112,6 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
 
             <span className="hidden md:inline">Обране</span>
 
-            {/* Цифровий індикатор кількості (бейдж) */}
             <span className="bg-gray-100 text-black px-1.5 py-0.5 text-[10px] font-mono border border-black ml-1">
               {favCount}
             </span>
@@ -212,7 +216,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
             </div>
           ) : (
             <div className="border-l border-gray-200 pl-4">
-              <Link to="/login" className="text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-black transition">
+              <Link to="/login" className="text-xs font-bold uppercase tracking-wider text-black hover:opacity-70 transition">
                 Увійти
               </Link>
             </div>

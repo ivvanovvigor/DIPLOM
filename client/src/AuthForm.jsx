@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useToast } from './ToastContext'; // ✅ Імпортуємо наш глобальний хук
-import { useAuth } from './AuthContext';   // ✅ ІМПОРТУЄМО НАШ КОНТЕКСТ
+import { useToast } from './ToastContext'; // Імпортуємо наш глобальний хук
+import { useAuth } from './AuthContext';   // ІМПОРТУЄМО НАШ КОНТЕКСТ
 
 const AuthForm = ({ mode }) => {
   const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
   const navigate = useNavigate();
-  const { showToast } = useToast(); // ✅ Ініціалізуємо тости
-  const { login } = useAuth();      // ✅ БЕРЕМО МЕТОД LOGIN З КОНТЕКСТУ
+  const { showToast } = useToast(); // Ініціалізуємо тости
+  const { login } = useAuth();      // БЕРЕМО МЕТОД LOGIN З КОНТЕКСТУ
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +18,8 @@ const AuthForm = ({ mode }) => {
       : { email: formData.email, password: formData.password };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}${endpoint}`, {
+      // VISPRALENO: Прибрано косі лапки для безпечної конкатенації системної змінної на Vercel
+      const response = await fetch(import.meta.env.VITE_API_URL + endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
@@ -28,19 +29,17 @@ const AuthForm = ({ mode }) => {
       
       if (response.ok) {
         if (mode === 'login') {
-          // ✅ ЗАМІСТЬ РУЧНОГО LOCALSTORAGE ВИКЛИКАЄМО НАШ КОНТЕКСТ
-          // Він сам усе запише куди треба і миттєво оновить Header без перезавантажень
+          // ЗАМІСТЬ РУЧНОГО LOCALSTORAGE ВИКЛИКАЄМО НАШ КОНТЕКСТ
           login(data.user, data.token); 
   
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
   
-          // Синхронізуємо старі хвости (хоча з контекстом це вже підстраховка)
+          // Синхронізуємо старі хвости
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
           
-          // ✅ ЖОДНИХ TIMEOUT ТА WINDOW.LOCATION.HREF
-          // Переходимо на сторінку магазину плавно і без перезапуску вкладки
-          navigate('/shop');
+          // ВИПРАВЛЕНО: Редірект на головну сторінку "/" замість "/shop" для відповідності з Header
+          navigate('/');
 
         } else {
           // Перед реєстрацією нового юзера чистимо старі дані

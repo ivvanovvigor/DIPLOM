@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-const ProductDetails = () => {
+// Приймаємо функції та стан обраного з пропсів App.jsx, щоб оживити сторінку
+const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/products/${id}`)
+    // Безпечна конкатенація URL без косих лапок, щоб уникнути збоїв збірки Vite на Vercel
+    fetch(import.meta.env.VITE_API_URL + '/api/products/' + id)
       .then((res) => res.json())
       .then((data) => {
         setProduct(data);
@@ -36,6 +38,14 @@ const ProductDetails = () => {
     );
   }
 
+  // Визначаємо, чи цей товар зараз є в обраному (за id або за productId з бази)
+  const isFavorite = favoriteItems.some(item => item.productId === product.id || item.id === product.id);
+
+  // Обробка шляху зображення, якщо лінк локальний
+  const productImgUrl = product.imageUrl && product.imageUrl.startsWith('http') 
+    ? product.imageUrl 
+    : (import.meta.env.VITE_API_URL + product.imageUrl);
+
   return (
     <div className="min-h-screen bg-white text-black p-6 md:p-16">
       {/* Навігація (Хлібні крихти) */}
@@ -53,7 +63,7 @@ const ProductDetails = () => {
         {/* ЛІВА ЧАСТИНА: Фотографія */}
         <div className="w-full aspect-square border border-gray-100 p-8 flex items-center justify-center bg-white">
           <img 
-            src={product.imageUrl} 
+            src={productImgUrl} 
             alt={product.title} 
             className="max-w-full max-h-full object-contain transform hover:scale-105 transition-transform duration-500"
           />
@@ -94,11 +104,28 @@ const ProductDetails = () => {
 
           {/* Дії покупця */}
           <div className="mt-6 pt-6 border-t border-gray-100 flex gap-4">
-            <button className="flex-1 h-12 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition active:scale-95">
+            {/* Прив'язано реальний хмарний кошик */}
+            <button 
+              onClick={() => addToCart && addToCart(product)}
+              className="flex-1 h-12 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition active:scale-95"
+            >
               Додати у кошик
             </button>
-            <button className="w-12 h-12 border border-black flex items-center justify-center hover:bg-black hover:text-white transition">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            
+            {/* Прив'язано хмарне обране зі зміною стану іконки серця */}
+            <button 
+              onClick={() => toggleFavorite && toggleFavorite(product)}
+              className={`w-12 h-12 border border-black flex items-center justify-center transition active:scale-95 ${
+                isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+              }`}
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5" 
+                fill={isFavorite ? "currentColor" : "none"} 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </button>

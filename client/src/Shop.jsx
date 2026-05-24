@@ -18,7 +18,8 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const categories = ['Всі', 'Шоломи', 'Екіпірування', 'Запчастини', 'Аксесуари'];
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/products`)
+    // ВИПРАВЛЕНО: Безпечна конкатенація URL для уникнення збоїв з косими лапками
+    fetch(import.meta.env.VITE_API_URL + '/api/products')
       .then((res) => res.json())
       .then((data) => {
         setProducts(data);
@@ -69,11 +70,11 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
     }
   };
 
-  // 🚀 Проксі-функція для перемикання хмарного ОБРАНОГО з відображенням тосту
+  // Проксі-функція для перемикання хмарного ОБРАНОГО з відображенням тосту
   const handleToggleFavoriteClick = async (product) => {
     if (toggleFavorite) {
-      // Визначаємо поточний стан об'єкта, дивимось чи він уже був у базі
-      const isCurrentlyFavorite = favoriteItems.some(item => item.id === product.id);
+      // ВИПРАВЛЕНО: Більш гнучка перевірка наявності в обраному (за id або за productId)
+      const isCurrentlyFavorite = favoriteItems.some(item => item.productId === product.id || item.id === product.id);
 
       await toggleFavorite(product);
 
@@ -176,17 +177,26 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         {/* СІТКА ТОВАРІВ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredProducts.map((product) => {
-            // 🚀 Перевірка статусу «В обраному» тепер йде через реактивний масив, отриманий з бази PostgreSQL/Neon
-            const isFavorite = favoriteItems.some(item => item.id === product.id);
+            // Перевірка статусу «В обраному» тепер шукає збіги за id продукту або productId з бази
+            const isFavorite = favoriteItems.some(item => item.productId === product.id || item.id === product.id);
+
+            // Безпечна обробка шляху зображення (якщо картинка локальна — додаємо URL бекенду)
+            const productImgUrl = product.imageUrl && product.imageUrl.startsWith('http') 
+              ? product.imageUrl 
+              : (import.meta.env.VITE_API_URL + product.imageUrl);
 
             return (
               <div key={product.id} className="group flex flex-col items-center bg-white border border-gray-100 p-4 transition-all hover:border-gray-300 rounded-none relative">
 
                 <Link to={`/product/${product.id}`} className="w-full aspect-square mb-4 overflow-hidden flex items-center justify-center cursor-pointer">
                   <img
-                    src={product.imageUrl}
+                    src={productImgUrl}
                     alt={product.title}
                     className="max-w-full max-h-full object-contain transition-transform duration-500 ease-in-out group-hover:scale-110"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.parentNode.innerText = 'MOTO';
+                    }}
                   />
                 </Link>
 

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext';
 
-// Додаємо новий пропс clearCart (або функцію, яка повністю занулює кошик на фронтенді)
 const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -22,7 +21,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
   const deliveryPrice = totalItemsPrice > 2000 || totalItemsPrice === 0 ? 0 : 150; // Безкоштовно від 2000 грн
   const finalTotal = totalItemsPrice + deliveryPrice;
 
-  // Видалення товару з тостом (використовуємо внутрішній id зв'язку CartItem)
+  // Видалення товару з тостом
   const handleRemove = (item) => {
     const itemTitle = item.product ? item.product.title : (item.title || 'Товар');
     removeFromCart(item.id);
@@ -51,7 +50,8 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
+      // Змінено ендпоінт на /api/orders та прибрано шаблонні лапки для безпеки URL
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,13 +74,12 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
       showToast(data.message || 'Замовлення успішно створено!', 'success');
 
-      // 🚀 ЗАМІСТЬ ЦИКЛУ: Просто очищаємо локальний стейт на фронтенді
+      // Очищаємо локальний стейт на фронтенді правильним шляхом
       if (typeof clearCart === 'function') {
-        clearCart(); // Якщо передано функцію повного очищення з App.jsx чи Context
+        clearCart(); 
       } else {
-        // Якщо такої функції немає, примусово очищаємо через поштучний фільтр стейту БЕЗ запитів на сервер,
-        // але краще передати clearCart з батька.
-        cartItems.length = 0; 
+        // На випадок, якщо забули передати clearCart, очищаємо поштучно через пропс видалення
+        cartItems.forEach(item => removeFromCart(item.id));
       }
 
       window.dispatchEvent(new Event('storage'));
@@ -127,7 +126,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                       <div className="w-16 h-16 bg-gray-100 border border-gray-200 flex items-center justify-center font-black text-gray-400 text-xs flex-shrink-0 overflow-hidden">
                         {itemImageUrl ? (
                           <img
-                            src={itemImageUrl.startsWith('http') ? itemImageUrl : `${import.meta.env.VITE_API_URL}${itemImageUrl}`}
+                            src={itemImageUrl.startsWith('http') ? itemImageUrl : (import.meta.env.VITE_API_URL + itemImageUrl)}
                             alt={itemTitle}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -223,7 +222,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
               <div className="mt-6 pt-4 border-t border-gray-100 text-[11px] text-gray-400 space-y-2">
                 <p className="flex items-center gap-2">🔒 Безпечне шифрування даних замовлення.</p>
-                <p>⚡ Офіційна гарантія та швидке повернення товарів протягом 14 днів.</p>
+                <p>Офіційна гарантія та швидке повернення товарів протягом 14 днів.</p>
               </div>
             </div>
 

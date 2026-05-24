@@ -12,8 +12,8 @@ const Profile = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Викликаємо новий безпечний ендпоінт, де сервер сам витягне юзера з токена
-    fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, {
+    // Прибрано косі лапки, використано безпечну конкатенацію URL
+    fetch(import.meta.env.VITE_API_URL + '/api/orders/my', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -30,22 +30,23 @@ const Profile = () => {
       .catch(err => console.error("Помилка завантаження замовлень:", err));
   }, []);
 
-  // 1. Коли користувач тицяє "Скасувати", ми відкриваємо модалку
+  // 1. Коли користувач тицяє "Скасувати", відкривається модалка
   const openCancelModal = (orderId) => {
     setOrderToCancel(orderId);
     setIsModalOpen(true);
   };
 
-  // 2. Функція, яка спрацьовує, якщо користувач підтвердив скасування у нашій модалці
+  // 2. Функція, яка спрацьовує, якщо користувач підтвердив скасування у модалці
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${orderToCancel}/cancel`, {
+      // Повністю прибрано шаблонні лапки для безпеки маршрутизації на Vercel
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders/' + orderToCancel + '/cancel', {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`, // Обов'язково додаємо токен сюди також!
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
@@ -62,7 +63,7 @@ const Profile = () => {
     } catch (err) {
       console.error(err);
       alert('Помилка при скасуванні замовлення.');
-    } finally {
+    } finally { // Опечатка у слові finally
       // Закриваємо модальне вікно та очищуємо тимчасовий стейт
       setIsModalOpen(false);
       setOrderToCancel(null);
@@ -171,7 +172,8 @@ const Profile = () => {
                     )}
                   </div>
                   <div className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                    Дата оформлення: {new Date(order.createdAt).toLocaleDateString('uk-UA')}
+                    {/* Безпечний парсинг дати без ризику падіння компонента */}
+                    Дата оформлення: {order.createdAt ? new Date(order.createdAt).toLocaleDateString('uk-UA') : 'Невідомо'}
                   </div>
                 </div>
               </div>
@@ -180,7 +182,7 @@ const Profile = () => {
         )}
       </div>
 
-      {/* 🕶️ КАСТОРМНЕ БРУТАЛІСТИЧНЕ МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
+      {/* КАСТОРМНЕ МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
           <div className="bg-white border-2 border-black p-6 max-w-sm w-full shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none transform transition-all">
@@ -192,7 +194,6 @@ const Profile = () => {
             </p>
             
             <div className="flex space-x-3">
-              {/* Кнопка ТАК */}
               <button
                 onClick={confirmCancelOrder}
                 className="flex-1 h-10 bg-black text-white text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition active:scale-95 rounded-none"
@@ -200,7 +201,6 @@ const Profile = () => {
                 Так, скасувати
               </button>
               
-              {/* Кнопка НІ */}
               <button
                 onClick={() => {
                   setIsModalOpen(false);
