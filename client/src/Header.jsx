@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext'; // ✅ ІМПОРТУЄМО НАШ ХУК ТОСТІВ
+import { useAuth } from './AuthContext';   // ✅ ІМПОРТУЄМО НАШ КОНТЕКСТ АВТОРИЗАЦІЇ
 
 // 🛒 Приймаємо хмарні cartItems, favoriteItems та функцію видалення прямо з пропсів App.jsx
 const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
@@ -8,9 +9,8 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
   const { showToast } = useToast(); // ✅ ІНІЦІАЛІЗУЄМО КОНТЕКСТ СПОВІЩЕНЬ
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  const token = localStorage.getItem('token');
+  // 🔐 БЕРЕМО ДАНІ АВТОРИЗАЦІЇ З ГЛОБАЛЬНОГО СТЕЙТУ ЗАМІСТЬ LOCALSTORAGE
+  const { user, token, logout } = useAuth();
 
   // 🎒 Динамічно рахуємо дані на основі хмарного стейту кошика
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -72,13 +72,11 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // Чистимо кошик та обране з пам'яті для повної безпеки
-    localStorage.removeItem('cart');
-    localStorage.removeItem('favorites');
-    window.location.href = '/login';
+  // 🚪 М'ЯКИЙ ВИХІД ЧЕРЕЗ AUTHCONTEXT З ПЛАВНИМ РЕДІРЕКТОМ
+  const handleLogoutClick = () => {
+    logout(); // Очистить стейт та localStorage всередині провайдера
+    showToast("Ви успішно вийшли з системи", "success");
+    navigate('/login'); // Переходимо без жорсткого перезавантаження сторінки
   };
 
   return (
@@ -93,13 +91,24 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
         </div>
 
         {/* ПРАВИЙ КУТОК */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
           <Link
             to="/favorites"
-            className="text-xs font-black uppercase tracking-widest text-red-600 hover:text-red-800 transition flex items-center space-x-1"
+            className="text-xs font-black uppercase tracking-widest text-black hover:opacity-70 transition flex items-center space-x-1"
           >
-            <span>Обране</span>
-            <span className="bg-red-100 px-1.5 py-0.5 text-[10px] font-mono border border-red-300 ml-1">
+            {/* Красиве чорне зафарбоване SVG-серце замість червоного емодзі */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 fill-black text-black inline-block mr-1"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+
+            <span className="hidden md:inline">Обране</span>
+
+            {/* Цифровий індикатор кількості (бейдж) */}
+            <span className="bg-gray-100 text-black px-1.5 py-0.5 text-[10px] font-mono border border-black ml-1">
               {favCount}
             </span>
           </Link>
@@ -122,7 +131,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
 
             {/* Модальне вікно кошика */}
             {isCartOpen && (
-              <div className="absolute right-0 mt-4 w-80 bg-white border border-gray-200 p-4 shadow-xl z-50 rounded-none">
+              <div className="absolute right-0 mt-4 w-[calc(100vw-2rem)] sm:w-80 bg-white border border-gray-200 p-4 shadow-xl z-50 rounded-none max-sm:fixed max-sm:top-16 max-sm:left-4 max-sm:right-4 max-sm:w-auto">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2 mb-3">Ваш кошик</h3>
 
                 {cartItems.length === 0 ? (
@@ -155,7 +164,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
                     <div className="mt-4 pt-3 border-t border-gray-100">
                       <div className="flex justify-between items-baseline text-xs uppercase font-bold text-gray-900">
                         <span>Разом:</span>
-                        <span className="text-sm font-black tracking-tight">{totalSum} UAH</span>
+                        <span className="text-sm font-black tracking-tight">{Number(totalSum).toFixed(2)} UAH</span>
                       </div>
 
                       <div className="space-y-2 mt-4">
@@ -195,7 +204,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
                 <span>Кабінет</span>
               </Link>
               <button
-                onClick={handleLogout}
+                onClick={handleLogoutClick}
                 className="text-xs font-bold uppercase tracking-wider text-red-500 hover:text-red-700 transition"
               >
                 Вийти

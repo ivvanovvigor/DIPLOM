@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext'; // ✅ Імпортуємо наш глобальний хук
+import { useAuth } from './AuthContext';   // ✅ ІМПОРТУЄМО НАШ КОНТЕКСТ
 
 const AuthForm = ({ mode }) => {
   const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
   const navigate = useNavigate();
   const { showToast } = useToast(); // ✅ Ініціалізуємо тости
+  const { login } = useAuth();      // ✅ БЕРЕМО МЕТОД LOGIN З КОНТЕКСТУ
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,41 +28,37 @@ const AuthForm = ({ mode }) => {
       
       if (response.ok) {
         if (mode === 'login') {
-          localStorage.setItem('token', data.token); 
-          localStorage.setItem('user', JSON.stringify(data.user)); 
+          // ✅ ЗАМІСТЬ РУЧНОГО LOCALSTORAGE ВИКЛИКАЄМО НАШ КОНТЕКСТ
+          // Він сам усе запише куди треба і миттєво оновить Header без перезавантажень
+          login(data.user, data.token); 
   
-          // ✅ ЗАМІСТЬ СИСТЕМНОГО ALERT — КРАСИВИЙ ЧОРНИЙ TOAST
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
   
-          // Оновлюємо інтерфейс шапки (кошик та обране)
+          // Синхронізуємо старі хвости (хоча з контекстом це вже підстраховка)
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
           
-          // ⏳ Даємо 1.5 секунди користувачу помилуватися тостом перед редиректом
-          setTimeout(() => {
-            window.location.href = '/shop'; 
-          }, 1500);
+          // ✅ ЖОДНИХ TIMEOUT ТА WINDOW.LOCATION.HREF
+          // Переходимо на сторінку магазину плавно і без перезапуску вкладки
+          navigate('/shop');
 
         } else {
-          // 🔄 Перед реєстрацією нового юзера про всяк випадок чистимо старі хвости
+          // Перед реєстрацією нового юзера чистимо старі дані
           localStorage.removeItem('cart');
           localStorage.removeItem('favorites');
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
 
-          // ✅ ЗАМІСТЬ СИСТЕМНОГО ALERT — ЧОРНИЙ TOAST ДЛЯ РЕЄСТРАЦІЇ
           showToast('Реєстрація успішна! Тепер увійдіть.', 'success');
           
           setFormData({ email: '', password: '', fullName: '' });
           navigate('/login');
         }
       } else {
-        // ❌ ЗАМІСТЬ alert() ПРИ ПОМИЛЦІ СЕРВЕРА — ЧЕРВОНИЙ TOAST
         showToast(data.message || 'Помилка аутентифікації', 'error');
       }
     } catch (err) {
       console.error("Помилка на фронтенді:", err);
-      // ❌ ЗАМІСТЬ alert() ПРИ КРИТИЧНІЙ ПОМИЛЦІ — ЧЕРВОНИЙ TOAST
       showToast('Помилка сервера. Перевірте з’єднання.', 'error');
     }
   };

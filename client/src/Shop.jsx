@@ -74,9 +74,9 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
     if (toggleFavorite) {
       // Визначаємо поточний стан об'єкта, дивимось чи він уже був у базі
       const isCurrentlyFavorite = favoriteItems.some(item => item.id === product.id);
-      
+
       await toggleFavorite(product);
-      
+
       if (isCurrentlyFavorite) {
         setToastMessage(`Товар "${product.title}" видалено з вибраного`);
       } else {
@@ -84,12 +84,23 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
       }
     }
   };
-  
+
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row relative">
 
+      {/* Кнопка для мобільних, яка прихована на десктопах (md:hidden) */}
+      <button
+        onClick={() => setIsFiltersOpen(!isFiltersOpen)}
+        className="md:hidden m-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-widest text-center"
+      >
+        {isFiltersOpen ? 'Приховати фільтри ✕' : 'Фільтри ⚙️'}
+      </button>
+
       {/* SIDEBAR (Бічна панель) */}
-      <aside className="w-full md:w-64 bg-gray-50 border-r border-gray-100 p-6 flex-shrink-0">
+      <aside className={`w-full md:w-64 bg-gray-50 border-r border-gray-100 p-6 flex-shrink-0 ${isFiltersOpen ? 'block' : 'hidden md:block'
+        }`}>
         <h2 className="text-lg font-black uppercase tracking-tight mb-8">Фільтри</h2>
 
         <div className="mb-6">
@@ -109,9 +120,8 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${
-                  activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
-                }`}
+                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
+                  }`}
               >
                 {cat}
               </button>
@@ -156,7 +166,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
               className="text-xs font-bold uppercase bg-gray-50 border border-gray-200 px-3 py-2 outline-none focus:border-black cursor-pointer rounded-none"
             >
               <option value="default">За замовчуванням</option>
-              <option value="popular">За популярністю 🔥</option>
+              <option value="popular">За популярністю</option>
               <option value="low-to-high">Від дешевих до дорогих ↑</option>
               <option value="high-to-low">Від дорогих до дешевих ↓</option>
             </select>
@@ -164,7 +174,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         </div>
 
         {/* СІТКА ТОВАРІВ */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredProducts.map((product) => {
             // 🚀 Перевірка статусу «В обраному» тепер йде через реактивний масив, отриманий з бази PostgreSQL/Neon
             const isFavorite = favoriteItems.some(item => item.id === product.id);
@@ -198,17 +208,16 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
                     <span className="text-[10px] font-bold uppercase">В кошик</span>
                   </button>
 
-                  <button 
+                  <button
                     onClick={() => handleToggleFavoriteClick(product)}
-                    className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${
-                      isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-                    }`}
+                    className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
+                      }`}
                   >
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      className="h-4 w-4" 
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
                       fill={isFavorite ? "currentColor" : "none"}
-                      viewBox="0 0 24 24" 
+                      viewBox="0 0 24 24"
                       stroke="currentColor"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
