@@ -11,14 +11,26 @@ const AuthForm = ({ mode }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      showToast("Введіть коректний формат email (наприклад, user@example.com)", "error");
+      return; // Зупиняємо відправку запиту на сервер
+    }
+
+    // Перевірка довжини пароля (теж корисно для захисту)
+    if (formData.password.length < 6) {
+      showToast("Пароль має бути не менше 6 символів", "error");
+      return;
+    }
+
     const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
-    
-    const requestBody = mode === 'register' 
+
+    const requestBody = mode === 'register'
       ? { email: formData.email, password: formData.password, fullName: formData.fullName }
       : { email: formData.email, password: formData.password };
 
     try {
-      // VISPRALENO: Прибрано косі лапки для безпечної конкатенації системної змінної на Vercel
       const response = await fetch(import.meta.env.VITE_API_URL + endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,19 +38,16 @@ const AuthForm = ({ mode }) => {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         if (mode === 'login') {
-          // ЗАМІСТЬ РУЧНОГО LOCALSTORAGE ВИКЛИКАЄМО НАШ КОНТЕКСТ
-          login(data.user, data.token); 
-  
+          login(data.user, data.token);
+
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
-  
-          // Синхронізуємо старі хвости
+
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
-          
-          // ВИПРАВЛЕНО: Редірект на головну сторінку "/" замість "/shop" для відповідності з Header
+
           navigate('/');
 
         } else {
@@ -49,7 +58,7 @@ const AuthForm = ({ mode }) => {
           window.dispatchEvent(new Event('favoritesUpdated'));
 
           showToast('Реєстрація успішна! Тепер увійдіть.', 'success');
-          
+
           setFormData({ email: '', password: '', fullName: '' });
           navigate('/login');
         }
@@ -68,7 +77,7 @@ const AuthForm = ({ mode }) => {
         <h2 className="text-center text-xl font-black uppercase tracking-widest mb-6 text-gray-800">
           {mode === 'register' ? 'Створити акаунт' : 'Вхід у систему'}
         </h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
             <input
@@ -100,7 +109,7 @@ const AuthForm = ({ mode }) => {
             {mode === 'register' ? 'Зареєструватися' : 'Увійти'}
           </button>
         </form>
-        
+
         <div className="mt-6 text-center text-xs text-gray-500 uppercase tracking-wider">
           {mode === 'register' ? (
             <p>Вже є акаунт? <Link to="/login" className="text-blue-600 font-bold hover:underline ml-1">Увійти</Link></p>
