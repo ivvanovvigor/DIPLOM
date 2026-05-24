@@ -10,7 +10,13 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key';
 
-app.use(cors());
+// Налаштування CORS: дозволяємо запити з усіх джерел для безпроблемного з'єднання з Vercel
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // ==========================================
@@ -120,10 +126,9 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 // ==========================================
-// 🛒 ХМАРНИЙ КОШИК (CART ROUTES)
+// ХМАРНИЙ КОШИК (CART ROUTES)
 // ==========================================
 
-// 1. Отримати кошик поточного юзера
 app.get('/api/cart', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   try {
@@ -148,7 +153,6 @@ app.get('/api/cart', authenticateToken, async (req, res) => {
   }
 });
 
-// 2. Додати товар до кошика
 app.post('/api/cart/add', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   const { productId, quantity } = req.body;
@@ -179,7 +183,6 @@ app.post('/api/cart/add', authenticateToken, async (req, res) => {
   }
 });
 
-// 3. Змінити кількість товару за його ID в кошику
 app.patch('/api/cart/update', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   const { id, quantity } = req.body;
@@ -202,7 +205,6 @@ app.patch('/api/cart/update', authenticateToken, async (req, res) => {
   }
 });
 
-// 4. Видалити товар з кошика за його ID в кошику
 app.delete('/api/cart/remove/:id', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   const id = parseInt(req.params.id);
@@ -222,13 +224,12 @@ app.delete('/api/cart/remove/:id', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// ❤️ ХМАРНЕ ОБРАНЕ (FAVORITES ROUTES) - ВИПРАВЛЕНО НА favoriteItem
+// ХМАРНЕ ОБРАНЕ (FAVORITES ROUTES)
 // ==========================================
 
 app.get('/api/favorites', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
   try {
-    // 🚀 Змінено з .favorite на .favoriteItem відповідно до оновленої схеми
     const favorites = await prisma.favoriteItem.findMany({
       where: { userId },
       include: { product: true }
@@ -247,7 +248,6 @@ app.post('/api/favorites/toggle', authenticateToken, async (req, res) => {
   const userId = req.user.userId;
 
   try {
-    // 🚀 Переведено на тайтл моделі favoriteItem
     const existing = await prisma.favoriteItem.findFirst({
       where: { userId, productId: Number(productId) }
     });
@@ -344,7 +344,10 @@ app.patch('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
   }
 });
 
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`🚀 Сервер працює на порту ${PORT}`);
+// ==========================================
+// МОДЕРНІЗОВАНИЙ ЗАПУСК СЕРВЕРА ДЛЯ ХОСТИНГУ
+// ==========================================
+// '0.0.0.0' відкриває сервер для зовнішнього світу, що критично для Render/Railway
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Сервер успішно запущено та відкрито на порту ${PORT}`);
 });
