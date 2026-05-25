@@ -186,29 +186,6 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                         <span className="text-sm font-black tracking-tight">{Number(totalSum).toFixed(2)} UAH</span>
                       </div>
 
-                      {/* БЛОК СПРОЩЕНОГО ОФОРМЛЕННЯ ДОСТАВКИ ДЛЯ ДИПЛОМУ */}
-                      <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
-                          Дані для доставки
-                        </p>
-                        <input
-                          type="tel"
-                          placeholder="Номер телефону (наприклад, 0931234567)"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full p-2 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none bg-gray-50 text-gray-900 font-medium"
-                          required
-                        />
-                        <input
-                          type="text"
-                          placeholder="Місто та № відділення Нової Пошти"
-                          value={deliveryAddress}
-                          onChange={(e) => setDeliveryAddress(e.target.value)}
-                          className="w-full p-2 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none bg-gray-50 text-gray-900 font-medium"
-                          required
-                        />
-                      </div>
-
                       <div className="mt-4">
                         <Link
                           to="/cart"
