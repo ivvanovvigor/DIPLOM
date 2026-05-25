@@ -7,7 +7,7 @@ async function main() {
     // 1. ШОЛОМИ (10 товарів)
     // ==========================================
     {
-      title: 'МОТОШЛЕМ AXXIS STORM S SV WHITE',
+      title: 'МОТОШОЛОМ AXXIS STORM S SV WHITE',
       price: 7040,
       category: 'Шоломи',
       description: 'Високоякісний модулярний шолом з вбудованими сонцезахисними окулярами.',
@@ -15,7 +15,7 @@ async function main() {
       specs: { "Тип": "Модуляр", "Матеріал": "Полікарбонат", "Вага": "1650 г", "Сертифікація": "ECE 22.06" }
     },
     {
-      title: 'ШОЛОМ MT REVENGE 2 RS BLACK',
+      title: 'МОТОШОЛОМ MT REVENGE 2 RS BLACK',
       price: 5200,
       category: 'Шоломи',
       description: 'Спортивний інтеграл з відмінною аеродинамікою для треку та міста.',
@@ -23,7 +23,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "Фібергласс", "Вага": "1450 г", "Сертифікація": "ECE 22.05" }
     },
     {
-      title: 'LS2 FF320 STREAM EVO SOLID',
+      title: 'МОТОШОЛОМ LS2 FF320 STREAM EVO SOLID',
       price: 4800,
       category: 'Шоломи',
       description: 'Комфортний повнолицевий шолом для щоденних поїздок містом.',
@@ -31,7 +31,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "HPTT термопласт", "Вага": "1550 г", "Сертифікація": "ECE 22.05" }
     },
     {
-      title: 'HJC C70 LANTIC',
+      title: 'МОТОШОЛОМ HJC C70 LANTIC',
       price: 6900,
       category: 'Шоломи',
       description: 'Аеродинамічний дизайн, чудова оглядовість та покращена вентиляція.',
@@ -39,7 +39,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "Полікарбонат", "Вага": "1500 г", "Сертифікація": "ECE 22.05" }
     },
     {
-      title: 'SHARK SKWAL I3 LINIK MATT',
+      title: 'МОТОШОЛОМ SHARK SKWAL I3 LINIK MATT',
       price: 11500,
       category: 'Шоломи',
       description: 'Перший у світі шолом з інтегрованими активними LED-стоп-сигналами.',
@@ -47,7 +47,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "Полікарбонат", "Вага": "1560 г", "Сертифікація": "ECE 22.06" }
     },
     {
-      title: 'AGV K3 SV MULTI BIRD',
+      title: 'МОТОШОЛОМ  AGV K3 SV MULTI BIRD',
       price: 9400,
       category: 'Шоломи',
       description: 'Агресивний спортивний дизайн від легендарного італійського бренду.',
@@ -55,7 +55,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "Термопластик", "Вага": "1490 г", "Сертифікація": "ECE 22.05" }
     },
     {
-      title: 'SHOEI NXR 2 SOLID BLACK',
+      title: 'МОТОШОЛОМ SHOEI NXR 2 SOLID BLACK',
       price: 24500,
       category: 'Шоломи',
       description: 'Преміальний японський шолом найвищого рівня безпеки та шумоізоляції.',
@@ -63,7 +63,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "AIM композит", "Вага": "1390 г", "Сертифікація": "ECE 22.06" }
     },
     {
-      title: 'NOLAN N80-8 ALLY N-COM',
+      title: 'МОТОШОЛОМ NOLAN N80-8 ALLY N-COM',
       price: 10800,
       category: 'Шоломи',
       description: 'Сучасний туринговий шолом з можливістю встановлення фірмової гарнітури.',
@@ -71,7 +71,7 @@ async function main() {
       specs: { "Тип": "Інтеграл", "Матеріал": "Полікарбонат Lexan", "Вага": "1530 г", "Сертифікація": "ECE 22.06" }
     },
     {
-      title: 'AIROH COMMANDER COLOR WHITE',
+      title: 'МОТОШОЛОМ AIROH COMMANDER COLOR WHITE',
       price: 13900,
       category: 'Шоломи',
       description: 'Універсальний шолом класу Ендуро/Тур-Ендуро зі знімним козирком.',
@@ -79,7 +79,7 @@ async function main() {
       specs: { "Тип": "Ендуро", "Матеріал": "Композит HPC", "Вага": "1430 г", "Сертифікація": "ECE 22.05" }
     },
     {
-      title: 'BELL QUALIFIER DLX MIPS',
+      title: 'МОТОШОЛОМ BELL QUALIFIER DLX MIPS',
       price: 7800,
       category: 'Шоломи',
       description: 'Шолом з технологією захисту мозку MIPS та фотохромним візором.',
@@ -91,7 +91,7 @@ async function main() {
     // 2. ЕКІПІРУВАННЯ (10 товарів)
     // ==========================================
     {
-      title: 'КУРТКА REVIT IGNITION 4 BLACK',
+      title: 'МОТОКУРТКА REVIT IGNITION 4 BLACK',
       price: 27200,
       category: 'Екіпірування',
       description: 'Преміальна куртка, що поєднує натуральну шкіру та вентильовану сітку.',
@@ -107,7 +107,7 @@ async function main() {
       specs: { "Тип": "Взуття", "Матеріал": "Мікрофібра", "Захист": "ТПУ протектори", "Клас": "Спорт" }
     },
     {
-      title: 'РУКАВИЧКИ FIVE RFX1 REPLICA',
+      title: 'МОТОРУКАВИЦІ FIVE RFX1 REPLICA',
       price: 5600,
       category: 'Екіпірування',
       description: 'Професійні гоночні рукавички з карбоновими вставками та кевларовою підкладкою.',
@@ -115,7 +115,7 @@ async function main() {
       specs: { "Тип": "Рукавички", "Матеріал": "Козяча шкіра", "Захист": "Карбон / Кевлар", "Клас": "Спорт" }
     },
     {
-      title: 'ДЖИНСИ SHIMA GIRO 2.0 KHAKI',
+      title: 'МОТОДЖИНСИ SHIMA GIRO 2.0 KHAKI',
       price: 4300,
       category: 'Екіпірування',
       description: 'Мотоциклетні джинси прямого крою з посиленням із волокон Aramide.',
@@ -147,7 +147,7 @@ async function main() {
       specs: { "Тип": "Комбінезон", "Матеріал": "Волов'я шкіра (1.3 мм)", "Захист": "GP-R коліна/ліктьові слайдери", "Сумісність": "Tech-Air 5" }
     },
     {
-      title: 'КУРТКА ТУРИСТИЧНА SPIDI MULTITECH',
+      title: 'МОТОКУРТКА ТУРИСТИЧНА SPIDI MULTITECH',
       price: 11200,
       category: 'Екіпірування',
       description: 'Надійна текстильна куртка для дальніх подорожей у будь-яку погоду.',
