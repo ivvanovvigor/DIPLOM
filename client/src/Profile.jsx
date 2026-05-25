@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from './AuthContext'; // Інтеграція контексту авторизації
+import { useToast } from './ToastContext'; // Красиві сповіщення замість alert
 
 const Profile = () => {
+  const { user } = useAuth(); // Беремо актуального юзера з контексту
+  const { showToast } = useToast();
   const [orders, setOrders] = useState([]);
-  const user = JSON.parse(localStorage.getItem('user'));
 
   // Стейт для керування кастомним модальним вікном
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,9 +13,9 @@ const Profile = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token || !user) return;
 
-    // Прибрано косі лапки, використано безпечну конкатенацію URL
+    // Безпечна конкатенація URL без косих лапок для Vercel
     fetch(import.meta.env.VITE_API_URL + '/api/orders/my', {
       method: 'GET',
       headers: {
@@ -27,22 +30,25 @@ const Profile = () => {
       .then(data => {
         setOrders(Array.isArray(data) ? data : []);
       })
-      .catch(err => console.error("Помилка завантаження замовлень:", err));
-  }, []);
+      .catch(err => {
+        console.error("Помилка завантаження замовлень:", err);
+        showToast("Помилка при завантаженні замовлень", "error");
+      });
+  }, [user]);
 
-  // 1. Коли користувач тицяє "Скасувати", відкривається модалка
+  // Відкриття модалки підтвердження
   const openCancelModal = (orderId) => {
     setOrderToCancel(orderId);
     setIsModalOpen(true);
   };
 
-  // 2. Функція, яка спрацьовує, якщо користувач підтвердив скасування у модалці
+  // Підтвердження скасування замовлення
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
     const token = localStorage.getItem('token');
 
     try {
-      // Повністю прибрано шаблонні лапки для безпеки маршрутизації на Vercel
+      // Конкатенація рядків для запобігання помилок маршрутизації
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders/' + orderToCancel + '/cancel', {
         method: 'PATCH',
         headers: {
@@ -60,11 +66,12 @@ const Profile = () => {
           order.id === orderToCancel ? { ...order, status: 'cancelled' } : order
         )
       );
+      showToast("Замовлення успішно скасовано", "success");
     } catch (err) {
       console.error(err);
-      alert('Помилка при скасуванні замовлення.');
-    } finally { // Опечатка у слові finally
-      // Закриваємо модальне вікно та очищуємо тимчасовий стейт
+      showToast("Не вдалося скасувати замовлення", "error");
+    } finally {
+      // Блок закриття модалки
       setIsModalOpen(false);
       setOrderToCancel(null);
     }
@@ -73,22 +80,23 @@ const Profile = () => {
   const renderStatus = (status) => {
     if (status === 'cancelled') {
       return (
-        <span className="text-[10px] font-black uppercase tracking-widest bg-red-50 text-red-700 border border-red-200 px-2 py-0.5">
+        <span className="text-[10px] font-black uppercase tracking-widest bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-none">
           Скасовано
         </span>
       );
     }
     return (
-      <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5">
+      <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-none">
         В обробці
       </span>
     );
   };
 
+  // Екран обмеження доступу, якщо юзер не авторизований
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
-        <div className="bg-white p-8 border border-gray-200 text-center rounded-none max-w-sm w-full">
+        <div className="bg-white p-8 border border-gray-200 text-center rounded-none max-w-sm w-full shadow-sm">
           <p className="text-xs uppercase font-black tracking-widest text-gray-400 mb-4">Доступ обмежено</p>
           <p className="text-sm font-medium text-gray-800 mb-6">Будь ласка, увійдіть в систему, щоб переглянути кабінет.</p>
           <a href="/login" className="inline-block w-full bg-black text-white p-3 text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition rounded-none">
@@ -153,7 +161,7 @@ const Profile = () => {
                       <span className="font-medium uppercase tracking-tight text-gray-900">
                         • {item.product?.title || 'Товар'}
                       </span>
-                      <span className="font-mono text-gray-500 bg-gray-50 px-2 py-0.5">
+                      <span className="font-mono text-gray-500 bg-gray-50 px-2 py-0.5 rounded-none">
                         x{item.quantity}
                       </span>
                     </div>
@@ -172,7 +180,6 @@ const Profile = () => {
                     )}
                   </div>
                   <div className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                    {/* Безпечний парсинг дати без ризику падіння компонента */}
                     Дата оформлення: {order.createdAt ? new Date(order.createdAt).toLocaleDateString('uk-UA') : 'Невідомо'}
                   </div>
                 </div>
@@ -182,15 +189,15 @@ const Profile = () => {
         )}
       </div>
 
-      {/* КАСТОРМНЕ МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
+      {/* КАСТОМНЕ МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-          <div className="bg-white border-2 border-black p-6 max-w-sm w-full shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none transform transition-all">
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white border-2 border-black p-6 max-w-sm w-full shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
             <h3 className="text-xs font-black uppercase tracking-widest text-red-600 mb-3">
               Підтвердження дії
             </h3>
             <p className="text-sm font-medium text-gray-900 mb-6 tracking-tight">
-              Ви впевнені, що хочете скасувати це замовлення? Цю дію не можна буде скасувати.
+              Ви впевнені, що хочете скасувати це замовлення? Цю дію не можна буде повернути.
             </p>
             
             <div className="flex space-x-3">
