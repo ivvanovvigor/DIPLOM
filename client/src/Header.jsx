@@ -213,12 +213,11 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                         <Link
                           to="/cart"
                           onClick={() => {
-                            // Якщо у тебе є стейт, який закриває модалку при кліку, викликай його тут, наприклад:
-                            // setIsCartOpen(false);
+                            setIsCartOpen(false);
                           }}
                           className="block w-full py-3 text-center text-xs font-black uppercase tracking-widest bg-black text-white hover:bg-gray-800 transition active:scale-[0.99] rounded-none"
                         >
-                          Перейти до кошика ↗
+                          Перейти до кошика
                         </Link>
                       </div>
                     </div>
