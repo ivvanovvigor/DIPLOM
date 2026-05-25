@@ -59,7 +59,7 @@ function App() {
     }
   }, []);
 
-  // Синхронізація при зміні статусу авторизації в межах поточної вкладки
+  // Синхронізація даних при зміні статусу авторизації
   useEffect(() => {
     if (isAuthenticated) {
       fetchCartFromServer();
@@ -70,18 +70,25 @@ function App() {
     }
   }, [isAuthenticated, fetchCartFromServer, fetchFavoritesFromServer]);
 
-  // Слухач МІЖВКЛАДКОВОГО сховища (реагує, якщо зайшли/вийшли в іншій вкладці)
+  // Синхронізація стану авторизації (для поточної вкладки та сусідніх вкладок)
   useEffect(() => {
-    const handleStorageChange = (e) => {
-      // Реагуємо лише на зміни токена, щоб уникнути нескінченних циклів запитів
-      if (e.key === 'token') {
-        const tokenExists = !!localStorage.getItem('token');
-        setIsAuthenticated(tokenExists);
-      }
+    const syncAuth = () => {
+      const tokenExists = !!localStorage.getItem('token');
+      setIsAuthenticated(tokenExists);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    // Слухач для міжвкладкового сховища (інші вкладки)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'token' || !e.key) syncAuth();
+    });
+
+    // Слухач для швидкої синхронізації в межах поточної вкладки
+    window.addEventListener('authChange', syncAuth);
+
+    return () => {
+      window.removeEventListener('storage', syncAuth);
+      window.removeEventListener('authChange', syncAuth);
+    };
   }, []);
 
   // ХМАРНЕ ДОДАВАННЯ В КОШИК
@@ -100,7 +107,7 @@ function App() {
       });
 
       if (response.ok) {
-        fetchCartFromServer(); // Оновлюємо стейт локально без генерації зайвих подій
+        fetchCartFromServer();
       }
     } catch (error) {
       console.error('Помилка додавання в хмарний кошик:', error);
@@ -184,10 +191,12 @@ function App() {
     setCartItems([]);
   };
 
-  // Функція для чистого виходу з системи (передамо в Профіль та Шапку за потреби)
+  // Функція для чистого виходу з системи
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
+    window.dispatchEvent(new Event('authChange'));
+    window.dispatchEvent(new Event('storage'));
   };
 
   return (
@@ -251,7 +260,7 @@ function App() {
             {/* Розумний редирект з кореню */}
             <Route path="/" element={<Navigate to={isAuthenticated ? "/shop" : "/login"} />} />
             
-            {/* Страховка від несучих роутів (404) */}
+            {/* Страховка від неіснуючих роутів (404) */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

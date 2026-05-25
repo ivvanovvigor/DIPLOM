@@ -58,14 +58,20 @@ const AuthForm = ({ mode }) => {
 
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
 
-          // Тригери для синхронізації кошика та обраного в App.jsx
+          // Миттєво сповіщаємо App.jsx про успішну авторизацію у поточній вкладці
+          window.dispatchEvent(new Event('authChange'));
+
+          // Тригери для синхронізації кошика та обраного в App.jsx для інших систем
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
 
+          // Перенаправлення на корінь додатка
           navigate('/');
         } else {
           // Скидання системних маркерів перед переходом на авторизацію
           localStorage.removeItem('token');
+          
+          window.dispatchEvent(new Event('authChange'));
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
 
