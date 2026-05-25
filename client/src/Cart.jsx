@@ -82,7 +82,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
     setIsSubmitting(true);
 
-    const fullPhoneNumber = `+380(${phone}`;
+    const fullPhoneNumber = phone;
     const fullAddressString = `${region}, м. ${city}, ${warehouse}`;
     const paymentMethodText = paymentMethod === 'online' ? 'Online Оплата / Оплата частинами' : 'Оплата при отриманні';
 
