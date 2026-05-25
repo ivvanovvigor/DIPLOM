@@ -7,6 +7,10 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Нові стейти для збору даних доставки
+  const [phone, setPhone] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+
   // Отримуємо токен та користувача
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -47,10 +51,15 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
       return;
     }
 
+    // 📞 Перевірка наявності контактних даних
+    if (!phone.trim() || !deliveryAddress.trim()) {
+      showToast("Будь ласка, заповніть номер телефону та адресу доставки", "error");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Змінено ендпоінт на /api/orders та прибрано шаблонні лапки для безпеки URL
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders', {
         method: 'POST',
         headers: {
@@ -60,8 +69,10 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
         body: JSON.stringify({
           userId: Number(user.id),
           totalAmount: Number(finalTotal),
+          phone: phone, // Передаємо номер телефону
+          address: deliveryAddress, // Передаємо адресу доставки
           cartItems: cartItems.map(item => ({
-            id: item.productId || item.id, // передаємо реальний ID продукту для зв'язку в замовленні
+            id: item.productId || item.id, 
             quantity: item.quantity,
             price: item.product ? item.product.price : (item.price || 0)
           }))
@@ -74,11 +85,14 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
       showToast(data.message || 'Замовлення успішно створено!', 'success');
 
+      // Очищаємо поля форми
+      setPhone('');
+      setDeliveryAddress('');
+
       // Очищаємо локальний стейт на фронтенді правильним шляхом
       if (typeof clearCart === 'function') {
         clearCart(); 
       } else {
-        // На випадок, якщо забули передати clearCart, очищаємо поштучно через пропс видалення
         cartItems.forEach(item => removeFromCart(item.id));
       }
 
@@ -111,6 +125,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
             {/* СПИСОК ТОВАРІВ */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(item => {
@@ -123,7 +138,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
                     {/* Інформація про товар */}
                     <div className="flex items-center space-x-4 flex-1 min-w-0">
-                      <div className="w-16 h-16 bg-gray-100 border border-gray-200 flex items-center justify-center font-black text-gray-400 text-xs flex-shrink-0 overflow-hidden">
+                      <div className="w-16 h-16 bg-gray-100 border border-gray-200 flex items-center justify-center font-black text-gray-400 text-xs flex-shrink-0 overflow-hidden rounded-none">
                         {itemImageUrl ? (
                           <img
                             src={itemImageUrl.startsWith('http') ? itemImageUrl : (import.meta.env.VITE_API_URL + itemImageUrl)}
@@ -151,13 +166,13 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                       <div className="flex items-center border border-gray-300 h-9">
                         <button
                           onClick={() => handleQuantityChange(item, item.quantity - 1)}
-                          className="px-3 h-full bg-gray-50 hover:bg-gray-200 text-sm font-bold transition"
+                          className="px-3 h-full bg-gray-50 hover:bg-gray-200 text-sm font-bold transition rounded-none"
                           disabled={isSubmitting}
                         >-</button>
                         <span className="px-4 font-mono text-sm font-bold text-gray-900">{item.quantity}</span>
                         <button
                           onClick={() => handleQuantityChange(item, item.quantity + 1)}
-                          className="px-3 h-full bg-gray-50 hover:bg-gray-200 text-sm font-bold transition"
+                          className="px-3 h-full bg-gray-50 hover:bg-gray-200 text-sm font-bold transition rounded-none"
                           disabled={isSubmitting}
                         >+</button>
                       </div>
@@ -183,7 +198,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                 Підсумок замовлення
               </h2>
 
-              <div className="space-y-3 font-medium text-sm text-gray-600 pb-4 border-b">
+              <div className="space-y-3 font-medium text-sm text-gray-600 pb-4">
                 <div className="flex justify-between">
                   <span>Вартість товарів:</span>
                   <span className="font-mono text-gray-900">{totalItemsPrice.toFixed(2)} UAH</span>
@@ -205,9 +220,40 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                 )}
               </div>
 
-              <div className="flex justify-between items-baseline py-4 mb-4">
+              {/* ІНТЕРФЕЙС ДАНИХ ДОСТАВКИ */}
+              <div className="mt-2 pt-4 border-t border-gray-200 space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  Реквізити одержувача та логістика
+                </p>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Мобільний телефон</label>
+                  <input
+                    type="tel"
+                    placeholder="Наприклад, 0931234567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none font-medium text-gray-900"
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Пункт доставки (Нова Пошта)</label>
+                  <input
+                    type="text"
+                    placeholder="Місто, номер або адреса відділення"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none font-medium text-gray-900"
+                    disabled={isSubmitting}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-baseline py-4 mt-2 mb-2 border-t border-gray-100">
                 <span className="text-xs font-black uppercase tracking-wider text-gray-900">Всього до сплати:</span>
-                <span className="text-xl font-black tracking-tight text-blue-600">{finalTotal.toFixed(2)} UAH</span>
+                <span className="text-xl font-black tracking-tight text-black">{finalTotal.toFixed(2)} UAH</span>
               </div>
 
               <button

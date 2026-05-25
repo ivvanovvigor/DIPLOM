@@ -6,8 +6,10 @@ import { useAuth } from './AuthContext';   // ІМПОРТ КОНТЕКСТУ А
 // Додано clearCart у пропси для очищення стану кошика після замовлення
 const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart }) => {
   const navigate = useNavigate();
-  const { showToast } = useToast(); 
+  const { showToast } = useToast();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [deliveryAddress, setDeliveryAddress] = useState('');
 
   // БЕРЕМО ДАНІ АВТОРИЗАЦІЇ З ГЛОБАЛЬНОГО СТЕЙТУ
   const { user, token, logout } = useAuth();
@@ -37,6 +39,12 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
       return;
     }
 
+    // Перевірка, чи заповнені дані доставки перед відправкою
+    if (!phone.trim() || !deliveryAddress.trim()) {
+      showToast("Будь ласка, заповніть номер телефону та адресу доставки", "error");
+      return;
+    }
+
     try {
       const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders', {
         method: 'POST',
@@ -47,6 +55,9 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
         body: JSON.stringify({
           userId: Number(user.id),
           totalAmount: Number(totalSum),
+          // Передаємо дані доставки (якщо бекенд їх підтримує)
+          phone: phone,
+          address: deliveryAddress,
           cartItems: cartItems.map(item => ({
             id: item.productId || item.id,
             quantity: item.quantity,
@@ -59,14 +70,18 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
         showToast("Замовлення успішно оформлено!", "success");
         setIsCartOpen(false);
 
-        // ВИПРАВЛЕНО: Викликаємо функцію очищення локального стейту кошика, якщо вона передана
+        // Скидаємо поля форми доставки
+        setPhone('');
+        setDeliveryAddress('');
+
+        // Викликаємо функцію очищення локального стейту кошика
         if (clearCart) {
           clearCart();
         } else {
           localStorage.removeItem('cart');
           window.dispatchEvent(new Event('storage'));
         }
-        
+
         navigate('/profile');
       } else {
         const errorData = await response.json();
@@ -80,9 +95,9 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
 
   // М'ЯКИЙ ВИХІД ЧЕРЕЗ AUTHCONTEXT З ПЛАВНИМ РЕДІРЕКТОМ
   const handleLogoutClick = () => {
-    logout(); 
+    logout();
     showToast("Ви успішно вийшли з системи", "success");
-    navigate('/login'); 
+    navigate('/login');
   };
 
   return (
@@ -169,6 +184,29 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                       <div className="flex justify-between items-baseline text-xs uppercase font-bold text-gray-900">
                         <span>Разом:</span>
                         <span className="text-sm font-black tracking-tight">{Number(totalSum).toFixed(2)} UAH</span>
+                      </div>
+
+                      {/* БЛОК СПРОЩЕНОГО ОФОРМЛЕННЯ ДОСТАВКИ ДЛЯ ДИПЛОМУ */}
+                      <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">
+                          Дані для доставки
+                        </p>
+                        <input
+                          type="tel"
+                          placeholder="Номер телефону (наприклад, 0931234567)"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="w-full p-2 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none bg-gray-50 text-gray-900 font-medium"
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="Місто та № відділення Нової Пошти"
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          className="w-full p-2 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none bg-gray-50 text-gray-900 font-medium"
+                          required
+                        />
                       </div>
 
                       <div className="space-y-2 mt-4">
