@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-// ⚡ Приймаємо дані та функції хмарного кошика й обраного з пропсів App.jsx
+// Приймаємо дані та функції хмарного кошика й обраного з пропсів App.jsx
 const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -18,7 +18,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const categories = ['Всі', 'Шоломи', 'Екіпірування', 'Запчастини', 'Аксесуари'];
 
   useEffect(() => {
-    // ВИПРАВЛЕНО: Безпечна конкатенація URL для уникнення збоїв з косими лапками
+    // Безпечна конкатенація URL для уникнення збоїв з косими лапками
     fetch(import.meta.env.VITE_API_URL + '/api/products')
       .then((res) => res.json())
       .then((data) => {
@@ -40,6 +40,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
       result = result.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
     }
 
+    // Безпечна фільтрація за ціною
     result = result.filter(p => p.price <= priceRange);
 
     if (sortBy === 'low-to-high') {
@@ -73,7 +74,6 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   // Проксі-функція для перемикання хмарного ОБРАНОГО з відображенням тосту
   const handleToggleFavoriteClick = async (product) => {
     if (toggleFavorite) {
-      // ВИПРАВЛЕНО: Більш гнучка перевірка наявності в обраному (за id або за productId)
       const isCurrentlyFavorite = favoriteItems.some(item => item.productId === product.id || item.id === product.id);
 
       await toggleFavorite(product);
@@ -91,7 +91,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   return (
     <div className="min-h-screen bg-white flex flex-col md:flex-row relative">
 
-      {/* Кнопка для мобільних, яка прихована на десктопах (md:hidden) */}
+      {/* Кнопка для мобільних */}
       <button
         onClick={() => setIsFiltersOpen(!isFiltersOpen)}
         className="md:hidden m-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-widest text-center"
@@ -100,8 +100,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
       </button>
 
       {/* SIDEBAR (Бічна панель) */}
-      <aside className={`w-full md:w-64 bg-gray-50 border-r border-gray-100 p-6 flex-shrink-0 ${isFiltersOpen ? 'block' : 'hidden md:block'
-        }`}>
+      <aside className={`w-full md:w-64 bg-gray-50 border-r border-gray-100 p-6 flex-shrink-0 ${isFiltersOpen ? 'block' : 'hidden md:block'}`}>
         <h2 className="text-lg font-black uppercase tracking-tight mb-8">Фільтри</h2>
 
         <div className="mb-6">
@@ -121,8 +120,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'
-                  }`}
+                className={`block w-full text-left px-3 py-2 rounded-none text-xs transition ${activeCategory === cat ? 'bg-black text-white font-bold' : 'text-gray-600 hover:bg-gray-200'}`}
               >
                 {cat}
               </button>
@@ -130,12 +128,16 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
           </div>
         </div>
 
+        {/* ПОВЗУНОК ЦІНИ (ВИПРАВЛЕНИЙ) */}
         <div className="mb-8">
           <label className="block text-[10px] font-bold uppercase text-gray-400 mb-4">
             Ціна до: <span className="text-black">{priceRange} грн</span>
           </label>
           <input
-            type="range" min="0" max="40000" step="100"
+            type="range"
+            min="0"
+            max="40000"
+            step="100"
             value={priceRange}
             onChange={(e) => setPriceRange(Number(e.target.value))}
             className="w-full accent-black cursor-pointer"
@@ -177,12 +179,10 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         {/* СІТКА ТОВАРІВ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {filteredProducts.map((product) => {
-            // Перевірка статусу «В обраному» тепер шукає збіги за id продукту або productId з бази
             const isFavorite = favoriteItems.some(item => item.productId === product.id || item.id === product.id);
 
-            // Безпечна обробка шляху зображення (якщо картинка локальна — додаємо URL бекенду)
-            const productImgUrl = product.imageUrl && product.imageUrl.startsWith('http') 
-              ? product.imageUrl 
+            const productImgUrl = product.imageUrl && product.imageUrl.startsWith('http')
+              ? product.imageUrl
               : (import.meta.env.VITE_API_URL + product.imageUrl);
 
             return (
@@ -220,8 +220,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
 
                   <button
                     onClick={() => handleToggleFavoriteClick(product)}
-                    className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
-                      }`}
+                    className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'}`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
