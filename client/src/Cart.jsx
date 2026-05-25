@@ -23,7 +23,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [phone, setPhone] = useState('');
-  
+
   // 📍 Покрокові стейти адреси
   const [region, setRegion] = useState('');
   const [city, setCity] = useState('');
@@ -42,7 +42,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
   }, 0);
 
   const deliveryPrice = totalItemsPrice > 2000 || totalItemsPrice === 0 ? 0 : 150;
-  
+
   // Розрахунок фінальної вартості з урахуванням знижки 2% за онлайн-оплату
   let finalTotal = totalItemsPrice + deliveryPrice;
   const discountAmount = finalTotal * 0.02;
@@ -100,7 +100,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           address: fullAddressString,
           paymentMethod: paymentMethodText, // Додаткове поле для бекенду
           cartItems: cartItems.map(item => ({
-            id: item.productId || item.id, 
+            id: item.productId || item.id,
             quantity: item.quantity,
             price: item.product ? item.product.price : (item.price || 0)
           }))
@@ -111,7 +111,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
       if (!response.ok) throw new Error(data.message || 'Помилка замовлення');
 
       showToast(data.message || 'Замовлення успішно створено!', 'success');
-      
+
       setPhone('');
       setRegion('');
       setCity('');
@@ -119,7 +119,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
       setPaymentMethod('online');
 
       if (typeof clearCart === 'function') {
-        clearCart(); 
+        clearCart();
       } else {
         cartItems.forEach(item => removeFromCart(item.id));
       }
@@ -155,7 +155,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            
+
             {/* СПИСОК ТОВАРІВ */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(item => {
@@ -237,20 +237,27 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
                 {/* Телефон */}
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Мобільний телефон *</label>
-                  <div className="flex items-center border border-gray-200 bg-gray-50 focus-within:border-black transition">
-                    <span className="pl-3.5 pr-1 text-xs font-mono font-bold text-gray-400 select-none">+380 (</span>
-                    <input
-                      type="tel"
-                      placeholder="XX) XXX-XX-XX"
-                      maxLength="14"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9\-() ]/g, ''))}
-                      className="w-full p-2.5 pl-0 bg-transparent outline-none text-xs font-mono font-bold text-gray-900 tracking-wider"
-                      disabled={isSubmitting}
-                      required
-                    />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Мобільний телефон *</label>
+                  <input
+                    type="tel"
+                    placeholder="+38 (0XX) XXX-XX-XX"
+                    maxLength="19"
+                    value={phone}
+                    onChange={(e) => {
+                      // Залишаємо цифри, плюси, мінуси, дужки та пробіли
+                      let val = e.target.value.replace(/[^0-9+\-() ]/g, '');
+
+                      // Автоматично підставляємо +380, якщо користувач тільки починає писати
+                      if (val.length === 1 && val !== '+') {
+                        val = '+380' + val;
+                      }
+
+                      setPhone(val);
+                    }}
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-black focus:bg-white outline-none transition text-sm font-medium text-gray-900 shadow-sm"
+                    disabled={isSubmitting}
+                    required
+                  />
                 </div>
 
                 {/* Область */}
@@ -260,7 +267,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                     value={region}
                     onChange={(e) => {
                       setRegion(e.target.value);
-                      setCity(''); 
+                      setCity('');
                       setWarehouse('');
                     }}
                     className="w-full p-2.5 bg-gray-50 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none font-bold text-gray-900 appearance-none cursor-pointer"
@@ -281,7 +288,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                     value={city}
                     onChange={(e) => {
                       setCity(e.target.value);
-                      setWarehouse(''); 
+                      setWarehouse('');
                     }}
                     className="w-full p-2.5 bg-gray-50 border border-gray-200 focus:border-black outline-none transition text-xs rounded-none font-bold text-gray-900 appearance-none cursor-pointer disabled:opacity-50"
                     disabled={!region || isSubmitting}
@@ -311,11 +318,11 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                   </select>
                 </div>
 
-                {/* 💳 НОВИЙ БЛОК: СПОСІБ ОПЛАТИ (ЗІ СКРІНШОТУ) */}
+                {/* СПОСІБ ОПЛАТИ */}
                 <div className="pt-3 border-t border-gray-200">
                   <label className="block text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2">Спосіб оплати</label>
                   <div className="space-y-2">
-                    
+
                     {/* Картка / Онлайн */}
                     <label className={`flex flex-col p-3 border transition cursor-pointer ${paymentMethod === 'online' ? 'border-black bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                       <div className="flex items-center gap-2">
@@ -360,9 +367,8 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
               <button
                 onClick={handleCheckoutSubmit}
                 disabled={isSubmitting || cartItems.length === 0}
-                className={`w-full h-12 text-white text-xs font-black uppercase tracking-widest transition active:scale-[0.98] rounded-none ${
-                  isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'
-                }`}
+                className={`w-full h-12 text-white text-xs font-black uppercase tracking-widest transition active:scale-[0.98] rounded-none ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'
+                  }`}
               >
                 {isSubmitting ? 'Оформляється...' : 'Підтвердити замовлення'}
               </button>
