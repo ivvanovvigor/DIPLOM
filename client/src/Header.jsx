@@ -209,20 +209,17 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                         />
                       </div>
 
-                      <div className="space-y-2 mt-4">
+                      <div className="mt-4">
                         <Link
                           to="/cart"
-                          onClick={() => setIsCartOpen(false)}
-                          className="flex items-center justify-center w-full h-10 bg-white text-black text-[10px] font-bold uppercase tracking-widest hover:bg-gray-50 transition border border-black rounded-none"
+                          onClick={() => {
+                            // Якщо у тебе є стейт, який закриває модалку при кліку, викликай його тут, наприклад:
+                            // setIsCartOpen(false);
+                          }}
+                          className="block w-full py-3 text-center text-xs font-black uppercase tracking-widest bg-black text-white hover:bg-gray-800 transition active:scale-[0.99] rounded-none"
                         >
-                          Перейти до кошика
+                          Перейти до кошика ↗
                         </Link>
-                        <button
-                          onClick={handleCheckout}
-                          className="flex items-center justify-center w-full h-10 bg-black text-white text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition rounded-none"
-                        >
-                          Оформити замовлення
-                        </button>
                       </div>
                     </div>
                   </>
