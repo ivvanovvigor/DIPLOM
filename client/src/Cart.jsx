@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext';
+import { useAuth } from './AuthContext';
 
-// Статичний довідник для логістики
+// Статичний довідник для логістичної системи
 const UKRAINE_LOGISTICS = {
   "Київська область": {
     "Київ": ["Відділення №1 (вул. Пирогівський шлях, 135)", "Відділення №5 (вул. Федорова, 32)", "Відділення №10 (вул. Василя Жуковського, 22А)"],
@@ -22,28 +23,25 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [phone, setPhone] = useState('');
+  // Отримання актуальних даних сесії з контексту авторизації
+  const { user, token } = useAuth();
 
-  // 📍 Покрокові стейти адреси
+  const [phone, setPhone] = useState('');
   const [region, setRegion] = useState('');
   const [city, setCity] = useState('');
   const [warehouse, setWarehouse] = useState('');
-
-  // 💳 Стейт для способу оплати ('online' або 'cash')
   const [paymentMethod, setPaymentMethod] = useState('online');
 
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  const token = localStorage.getItem('token');
-
+  // Підрахунок базової вартості товарів у кошику
   const totalItemsPrice = cartItems.reduce((sum, item) => {
     const price = item.product ? item.product.price : (item.price || 0);
     return sum + price * item.quantity;
   }, 0);
 
+  // Розрахунок вартості доставки (безкоштовно при замовленні від 2000 UAH)
   const deliveryPrice = totalItemsPrice > 2000 || totalItemsPrice === 0 ? 0 : 150;
 
-  // Розрахунок фінальної вартості з урахуванням знижки 2% за онлайн-оплату
+  // Нарахування знижки 2% при виборі онлайн-оплати
   let finalTotal = totalItemsPrice + deliveryPrice;
   const discountAmount = finalTotal * 0.02;
 
@@ -51,12 +49,14 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
     finalTotal = finalTotal - discountAmount;
   }
 
+  // Видалення позиції з кошика з нотифікацією
   const handleRemove = (item) => {
     const itemTitle = item.product ? item.product.title : (item.title || 'Товар');
     removeFromCart(item.id);
     showToast(`"${itemTitle}" видалено з кошика`, 'success');
   };
 
+  // Зміна кількості товару з перевіркою мінімального ліміту
   const handleQuantityChange = (item, newQuantity) => {
     if (newQuantity < 1) {
       handleRemove(item);
@@ -65,6 +65,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
     }
   };
 
+  // Відправка замовлення на сервер
   const handleCheckoutSubmit = async () => {
     if (cartItems.length === 0) return;
 
@@ -74,7 +75,6 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
       return;
     }
 
-    // Перевірка заповнення ВСІХ полів
     if (!phone.trim() || !region || !city || !warehouse) {
       showToast("Будь ласка, заповніть номер телефону та оберіть повну адресу доставки", "error");
       return;
@@ -98,7 +98,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           totalAmount: Number(finalTotal.toFixed(2)),
           phone: fullPhoneNumber,
           address: fullAddressString,
-          paymentMethod: paymentMethodText, // Додаткове поле для бекенду
+          paymentMethod: paymentMethodText,
           cartItems: cartItems.map(item => ({
             id: item.productId || item.id,
             quantity: item.quantity,
@@ -112,6 +112,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
       showToast(data.message || 'Замовлення успішно створено!', 'success');
 
+      // Скидання стану форми після успішної операції
       setPhone('');
       setRegion('');
       setCity('');
@@ -135,7 +136,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
     }
   };
 
-  // Допоміжні масиви на основі вибору користувача
+  // Фільтрація списків логістики на основі вибору користувача
   const availableCities = region ? Object.keys(UKRAINE_LOGISTICS[region] || {}) : [];
   const availableWarehouses = (region && city) ? UKRAINE_LOGISTICS[region][city] || [] : [];
 
@@ -156,7 +157,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
 
-            {/* СПИСОК ТОВАРІВ */}
+            {/* Список обраних товарів */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(item => {
                 const itemTitle = item.product ? item.product.title : (item.title || 'Товар');
@@ -201,7 +202,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
               })}
             </div>
 
-            {/* БЛОК ПІДСУМКУ ЗАМОВЛЕННЯ */}
+            {/* Фінансовий підсумок та параметри доставки */}
             <div className="bg-white border border-gray-200 p-6 shadow-md sticky top-24">
               <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 border-b pb-3 mb-4">
                 Підсумок замовлення
@@ -220,7 +221,6 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                     ) : `${deliveryPrice.toFixed(2)} UAH`}
                   </span>
                 </div>
-                {/* Динамічний вивід знижки в чек */}
                 {paymentMethod === 'online' && finalTotal > 0 && (
                   <div className="flex justify-between text-xs text-green-600 font-bold">
                     <span>Економія 2% (Онлайн):</span>
@@ -229,13 +229,12 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                 )}
               </div>
 
-              {/* РЕКВІЗИТИ ТА ЛОГІСТИКА */}
               <div className="mt-2 pt-4 border-t border-gray-200 space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
                   Реквізити одержувача та логістика
                 </p>
 
-                {/* Телефон */}
+                {/* Введення номеру телефону */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Мобільний телефон *</label>
                   <input
@@ -244,14 +243,10 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                     maxLength="19"
                     value={phone}
                     onChange={(e) => {
-                      // Залишаємо цифри, плюси, мінуси, дужки та пробіли
                       let val = e.target.value.replace(/[^0-9+\-() ]/g, '');
-
-                      // Автоматично підставляємо +380, якщо користувач тільки починає писати
                       if (val.length === 1 && val !== '+') {
                         val = '+380' + val;
                       }
-
                       setPhone(val);
                     }}
                     className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg focus:border-black focus:bg-white outline-none transition text-sm font-medium text-gray-900 shadow-sm"
@@ -260,7 +255,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                   />
                 </div>
 
-                {/* Область */}
+                {/* Селектор областей */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Регіон / Область *</label>
                   <select
@@ -281,7 +276,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                   </select>
                 </div>
 
-                {/* Місто */}
+                {/* Селектор міст */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Місто *</label>
                   <select
@@ -301,7 +296,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                   </select>
                 </div>
 
-                {/* Адреса / Відділення */}
+                {/* Селектор поштових відділень */}
                 <div>
                   <label className="block text-[10px] uppercase font-bold text-gray-500 mb-1">Адреса доставки *</label>
                   <select
@@ -318,12 +313,10 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                   </select>
                 </div>
 
-                {/* СПОСІБ ОПЛАТИ */}
+                {/* Вибір методу оплати */}
                 <div className="pt-3 border-t border-gray-200">
                   <label className="block text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2">Спосіб оплати</label>
                   <div className="space-y-2">
-
-                    {/* Картка / Онлайн */}
                     <label className={`flex flex-col p-3 border transition cursor-pointer ${paymentMethod === 'online' ? 'border-black bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                       <div className="flex items-center gap-2">
                         <input
@@ -337,11 +330,10 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                         <span className="text-xs font-bold text-gray-900">Online Оплата / Оплата частинами</span>
                       </div>
                       <div className="mt-1.5 ml-5 bg-green-50 border border-dashed border-green-300 text-green-700 text-[10px] px-2 py-0.5 font-medium inline-block w-max">
-                        Економіія 2% на післяплаті
+                        Економія 2% на післяплаті
                       </div>
                     </label>
 
-                    {/* Післяплата */}
                     <label className={`flex items-center gap-2 p-3 border transition cursor-pointer ${paymentMethod === 'cash' ? 'border-black bg-gray-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                       <input
                         type="radio"
@@ -353,12 +345,11 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                       />
                       <span className="text-xs font-bold text-gray-900">Оплата при отриманні</span>
                     </label>
-
                   </div>
                 </div>
               </div>
 
-              {/* Фінал */}
+              {/* Фінальний розрахунок та кнопка підтвердження */}
               <div className="flex justify-between items-baseline py-4 mt-4 mb-2 border-t border-gray-100">
                 <span className="text-xs font-black uppercase tracking-wider text-gray-900">Всього до сплати:</span>
                 <span className="text-xl font-black tracking-tight text-blue-600">{finalTotal.toFixed(2)} UAH</span>
@@ -367,10 +358,11 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
               <button
                 onClick={handleCheckoutSubmit}
                 disabled={isSubmitting || cartItems.length === 0}
-                className={`w-full h-12 text-white text-xs font-black uppercase tracking-widest transition active:scale-[0.98] rounded-none ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'
-                  }`}
+                className={`w-full h-12 text-white text-xs font-black uppercase tracking-widest transition active:scale-[0.98] rounded-none ${
+                  isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-black hover:bg-gray-800'
+                }`}
               >
-                {isSubmitting ? 'Оформляється...' : 'Підтвердити замовлення'}
+                {isSubmitting ? 'Оформлюється...' : 'Підтвердити замовлення'}
               </button>
             </div>
           </div>

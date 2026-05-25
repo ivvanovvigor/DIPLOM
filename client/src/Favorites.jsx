@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-// ⚡ Приймаємо хмарні дані та функції з пропсів App.jsx
+// Приймаємо хмарні дані та функції з пропсів App.jsx
 const Favorites = ({ favoriteItems = [], toggleFavorite, addToCart }) => {
 
   return (

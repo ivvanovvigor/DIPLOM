@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key';
 
-// Налаштування CORS: дозволяємо запити з усіх джерел для безпроблемного з'єднання з Vercel
+// Налаштування CORS: дозволяє запити з усіх джерел для безпроблемного з'єднання з Vercel
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
@@ -345,9 +345,8 @@ app.patch('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
 });
 
 // ==========================================
-// МОДЕРНІЗОВАНИЙ ЗАПУСК СЕРВЕРА ДЛЯ ХОСТИНГУ
+// ЗАПУСК СЕРВЕРА ДЛЯ ХОСТИНГУ
 // ==========================================
-// '0.0.0.0' відкриває сервер для зовнішнього світу, що критично для Render/Railway
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Сервер успішно запущено та відкрито на порту ${PORT}`);
 });

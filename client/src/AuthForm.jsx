@@ -1,37 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useToast } from './ToastContext'; // Імпортуємо наш глобальний хук
-import { useAuth } from './AuthContext';   // ІМПОРТУЄМО НАШ КОНТЕКСТ
+import { useToast } from './ToastContext';
+import { useAuth } from './AuthContext';
 
 const AuthForm = ({ mode }) => {
   const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
   const navigate = useNavigate();
-  const { showToast } = useToast(); // Ініціалізуємо тости
-  const { login } = useAuth();      // БЕРЕМО МЕТОД LOGIN З КОНТЕКСТУ
+  const { showToast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Базова перевірка загального формату (наявність @ та крапки)
+    // Перевірка загального формату електронної пошти
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       showToast("Введіть коректний формат email (наприклад, user@example.com)", "error");
       return;
     }
 
-    // Перевірка на реальні дозволені домени
-    // Виділяємо все, що йде після символу "@" і переводимо в нижній регістр
-    const emailDomain = formData.email.split('@')[1].toLowerCase();
+    // Валідація поштових доменів при реєстрації нового користувача
+    if (mode === 'register') {
+      const emailDomain = formData.email.split('@')[1].toLowerCase();
+      const allowedDomains = ['gmail.com', 'ukr.net', 'yahoo.com', 'outlook.com', 'icloud.com'];
 
-    // Список «білих» реальних доменів, які дозволені на сайті
-    const allowedDomains = ['gmail.com', 'ukr.net', 'yahoo.com', 'outlook.com', 'icloud.com'];
-
-    if (!allowedDomains.includes(emailDomain)) {
-      showToast("Реєстрація дозволена тільки для пошт: Gmail, Ukr.net, Outlook, Yahoo, iCloud", "error");
-      return; // Блокуємо відправку на сервер
+      if (!allowedDomains.includes(emailDomain)) {
+        showToast("Реєстрація дозволена тільки для пошт: Gmail, Ukr.net, Outlook, Yahoo, iCloud", "error");
+        return;
+      }
     }
 
-    // Довжина пароля (щоб не реєстрували акаунти з паролем "1")
+    // Перевірка мінімальної довжини пароля
     if (formData.password.length < 6) {
       showToast("Пароль має бути не менше 6 символів", "error");
       return;
@@ -54,19 +53,19 @@ const AuthForm = ({ mode }) => {
 
       if (response.ok) {
         if (mode === 'login') {
+          // Авторизація користувача та збереження сесії в контексті
           login(data.user, data.token);
 
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
 
+          // Тригери для синхронізації кошика та обраного в App.jsx
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
 
           navigate('/');
-
         } else {
-          // Перед реєстрацією нового юзера чистимо старі дані
-          localStorage.removeItem('cart');
-          localStorage.removeItem('favorites');
+          // Скидання системних маркерів перед переходом на авторизацію
+          localStorage.removeItem('token');
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
 

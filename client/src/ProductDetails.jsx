@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-// Приймаємо функції та стан обраного з пропсів App.jsx, щоб оживити сторінку
 const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Безпечна конкатенація URL без косих лапок, щоб уникнути збоїв збірки Vite на Vercel
     fetch(import.meta.env.VITE_API_URL + '/api/products/' + id)
       .then((res) => res.json())
       .then((data) => {
@@ -20,6 +18,12 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         setLoading(false);
       });
   }, [id]);
+
+  // Кешуємо статус «В обраному», щоб компонент не смикався зайвий раз
+  const isFavorite = useMemo(() => {
+    if (!product) return false;
+    return favoriteItems.some(item => item.productId === product.id || item.id === product.id);
+  }, [product, favoriteItems]);
 
   if (loading) {
     return (
@@ -38,17 +42,15 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
     );
   }
 
-  // Визначаємо, чи цей товар зараз є в обраному (за id або за productId з бази)
-  const isFavorite = favoriteItems.some(item => item.productId === product.id || item.id === product.id);
-
-  // Обробка шляху зображення, якщо лінк локальний
   const productImgUrl = product.imageUrl && product.imageUrl.startsWith('http') 
     ? product.imageUrl 
     : (import.meta.env.VITE_API_URL + product.imageUrl);
 
+  // Перевіряємо, що specs це дійсно об'єкт і він не null
+  const hasSpecs = product.specs && typeof product.specs === 'object' && !Array.isArray(product.specs) && Object.keys(product.specs).length > 0;
+
   return (
     <div className="min-h-screen bg-white text-black p-6 md:p-16">
-      {/* Навігація (Хлібні крихти) */}
       <div className="max-w-6xl mx-auto mb-8">
         <Link to="/" className="text-[10px] font-bold uppercase text-gray-400 hover:text-black transition">
           Каталог
@@ -57,10 +59,10 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         <span className="text-[10px] font-bold uppercase text-gray-400">{product.category}</span>
       </div>
 
-      {/* Основна розмітка картки */}
+      {/* Основна розмітка */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
         
-        {/* ЛІВА ЧАСТИНА: Фотографія */}
+        {/* ЛІВА ЧАСТИНА: Фото */}
         <div className="w-full aspect-square border border-gray-100 p-8 flex items-center justify-center bg-white">
           <img 
             src={productImgUrl} 
@@ -69,7 +71,7 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
           />
         </div>
 
-        {/* ПРАВА ЧАСТИНА: Текст та Характеристики */}
+        {/* ПРАВА ЧАСТИНА: Інфо */}
         <div className="flex flex-col justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-4 leading-tight">
@@ -83,18 +85,18 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
             <div className="w-12 h-[1px] bg-black mb-6"></div>
 
             <p className="text-xs text-gray-600 leading-relaxed mb-8">
-              {product.description || "Опис для даного товару тимчасово відсутній. Повна інформація буде доступна найближчим часом."}
+              {product.description || "Опис для даного товару тимчасово відсутній."}
             </p>
 
-            {/* БЛОК ХАРАКТЕРИСТИК (Парсинг JSON з бази) */}
-            {product.specs && Object.keys(product.specs).length > 0 && (
+            {/* ХАРАКТЕРИСТИКИ */}
+            {hasSpecs && (
               <div className="mb-8">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4">Технічні характеристики</h3>
                 <div className="border-t border-gray-100 divide-y divide-gray-100">
                   {Object.entries(product.specs).map(([key, value]) => (
                     <div key={key} className="grid grid-cols-2 py-2.5 text-xs">
                       <span className="font-medium text-gray-500">{key}</span>
-                      <span className="font-bold text-right uppercase tracking-tight">{value}</span>
+                      <span className="font-bold text-right uppercase tracking-tight">{String(value)}</span>
                     </div>
                   ))}
                 </div>
@@ -102,20 +104,18 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
             )}
           </div>
 
-          {/* Дії покупця */}
+          {/* Кнопки дії */}
           <div className="mt-6 pt-6 border-t border-gray-100 flex gap-4">
-            {/* Прив'язано реальний хмарний кошик */}
             <button 
               onClick={() => addToCart && addToCart(product)}
-              className="flex-1 h-12 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition active:scale-95"
+              className="flex-1 h-12 bg-black text-white text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition active:scale-95 rounded-none"
             >
               Додати у кошик
             </button>
             
-            {/* Прив'язано хмарне обране зі зміною стану іконки серця */}
             <button 
               onClick={() => toggleFavorite && toggleFavorite(product)}
-              className={`w-12 h-12 border border-black flex items-center justify-center transition active:scale-95 ${
+              className={`w-12 h-12 border border-black flex items-center justify-center transition active:scale-95 rounded-none ${
                 isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'
               }`}
             >

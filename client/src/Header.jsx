@@ -1,99 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useToast } from './ToastContext'; // ІМПОРТ ХУКА ТОСТІВ
-import { useAuth } from './AuthContext';   // ІМПОРТ КОНТЕКСТУ АВТОРИЗАЦІЇ
+import { useToast } from './ToastContext';
+import { useAuth } from './AuthContext';
 
-// Додано clearCart у пропси для очищення стану кошика після замовлення
-const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart }) => {
+const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
 
-  // БЕРЕМО ДАНІ АВТОРИЗАЦІЇ З ГЛОБАЛЬНОГО СТЕЙТУ
+  // Отримання даних авторизації та методу виходу з глобального контексту
   const { user, token, logout } = useAuth();
 
-  // Динамічно рахуємо дані на основі хмарного стейту кошика
+  // Підрахунок загальної кількості товарів у кошику
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Динамічно рахуємо кількість елементів в обраному на основі пропса з бази даних
+  // Підрахунок кількості елементів в обраному
   const favCount = favoriteItems.length;
 
-  // Автоматична адаптація суми під структуру Prisma (item.price або item.product.price)
+  // Підрахунок загальної суми товарів з урахуванням структури Prisma
   const totalSum = cartItems.reduce((sum, item) => {
     const price = item.price || (item.product ? item.product.price : 0);
     return sum + (price * item.quantity);
   }, 0);
 
-  // МОДЕРНІЗОВАНА ФУНКЦІЯ ОФОРМЛЕННЯ ЗАМОВЛЕННЯ З TOAST
-  const handleCheckout = async () => {
-    if (!user || !token) {
-      showToast("Будь ласка, увійдіть в систему для оформлення замовлення", "error");
-      navigate('/login');
-      return;
-    }
-
-    if (cartItems.length === 0) {
-      showToast("Ваш кошик порожній", "error");
-      return;
-    }
-
-    // Перевірка, чи заповнені дані доставки перед відправкою
-    if (!phone.trim() || !deliveryAddress.trim()) {
-      showToast("Будь ласка, заповніть номер телефону та адресу доставки", "error");
-      return;
-    }
-
-    try {
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          userId: Number(user.id),
-          totalAmount: Number(totalSum),
-          // Передаємо дані доставки (якщо бекенд їх підтримує)
-          phone: phone,
-          address: deliveryAddress,
-          cartItems: cartItems.map(item => ({
-            id: item.productId || item.id,
-            quantity: item.quantity,
-            price: item.price || (item.product ? item.product.price : 0)
-          }))
-        })
-      });
-
-      if (response.ok) {
-        showToast("Замовлення успішно оформлено!", "success");
-        setIsCartOpen(false);
-
-        // Скидаємо поля форми доставки
-        setPhone('');
-        setDeliveryAddress('');
-
-        // Викликаємо функцію очищення локального стейту кошика
-        if (clearCart) {
-          clearCart();
-        } else {
-          localStorage.removeItem('cart');
-          window.dispatchEvent(new Event('storage'));
-        }
-
-        navigate('/profile');
-      } else {
-        const errorData = await response.json();
-        showToast(`Помилка: ${errorData.message || 'Не вдалося оформити'}`, "error");
-      }
-    } catch (error) {
-      console.error("Помилка відправки:", error);
-      showToast("Не вдалося зв'язатися з сервером", "error");
-    }
-  };
-
-  // М'ЯКИЙ ВИХІД ЧЕРЕЗ AUTHCONTEXT З ПЛАВНИМ РЕДІРЕКТОМ
+  // Обробка виходу користувача із системи
   const handleLogoutClick = () => {
     logout();
     showToast("Ви успішно вийшли з системи", "success");
@@ -104,15 +34,17 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
     <header className="w-full bg-white border-b border-gray-100 px-6 py-5 md:px-12 sticky top-0 z-50">
       <div className="w-full flex justify-between items-center">
 
-        {/* ЛІВИЙ КУТОК */}
+        {/* Логотип сайту */}
         <div className="flex items-center space-x-8">
           <Link to="/" className="text-lg font-black uppercase tracking-widest text-black hover:opacity-80 transition">
             MOTO STORE
           </Link>
         </div>
 
-        {/* ПРАВИЙ КУТОК */}
+        {/* Навігація та елементи керування */}
         <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
+          
+          {/* Посилання на сторінку обраного */}
           <Link
             to="/favorites"
             className="text-xs font-black uppercase tracking-widest text-black hover:opacity-70 transition flex items-center space-x-1"
@@ -124,15 +56,13 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
             >
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
-
             <span className="hidden md:inline">Обране</span>
-
             <span className="bg-gray-100 text-black px-1.5 py-0.5 text-[10px] font-mono border border-black ml-1">
               {favCount}
             </span>
           </Link>
 
-          {/* Блок Кошика */}
+          {/* Кнопка виклику модального вікна кошика */}
           <div className="relative">
             <button
               onClick={() => setIsCartOpen(!isCartOpen)}
@@ -157,6 +87,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                   <p className="text-gray-400 text-xs text-center py-6 italic">Кошик порожній</p>
                 ) : (
                   <>
+                    {/* Список товарів у модалці */}
                     <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
                       {cartItems.map((item) => {
                         const itemTitle = item.title || (item.product ? item.product.title : 'Товар');
@@ -180,6 +111,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                       })}
                     </div>
 
+                    {/* Нижня частина модалки з переходом до повноцінного кошика */}
                     <div className="mt-4 pt-3 border-t border-gray-100">
                       <div className="flex justify-between items-baseline text-xs uppercase font-bold text-gray-900">
                         <span>Разом:</span>
@@ -189,9 +121,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
                       <div className="mt-4">
                         <Link
                           to="/cart"
-                          onClick={() => {
-                            setIsCartOpen(false);
-                          }}
+                          onClick={() => setIsCartOpen(false)}
                           className="block w-full py-3 text-center text-xs font-black uppercase tracking-widest bg-black text-white hover:bg-gray-800 transition active:scale-[0.99] rounded-none"
                         >
                           Перейти до кошика
@@ -204,7 +134,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, clearCart 
             )}
           </div>
 
-          {/* Блок перевірки авторизації */}
+          {/* Блок аутентифікації користувача */}
           {token ? (
             <div className="flex items-center space-x-5 border-l border-gray-200 pl-5">
               <Link

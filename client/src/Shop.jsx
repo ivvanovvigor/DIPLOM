@@ -128,7 +128,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
           </div>
         </div>
 
-        {/* ПОВЗУНОК ЦІНИ (ВИПРАВЛЕНИЙ) */}
+        {/* ПОВЗУНОК ЦІНИ */}
         <div className="mb-8">
           <label className="block text-[10px] font-bold uppercase text-gray-400 mb-4">
             Ціна до: <span className="text-black">{priceRange} грн</span>

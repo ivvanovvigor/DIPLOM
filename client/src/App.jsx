@@ -11,13 +11,11 @@ import Favorites from './Favorites';
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 function App() {
-  // 🔐 Робимо статус авторизації реактивним стейтом
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [cartItems, setCartItems] = useState([]);
-  // ❤️ Додаємо реактивний стейт для обраних товарів
   const [favoriteItems, setFavoriteItems] = useState([]);
 
-  // 📥 1. ХМАРНЕ ЗАВАНТАЖЕННЯ: Функція отримання кошика з бази даних сервера
+  // ХМАРНЕ ЗАВАНТАЖЕННЯ КОШИКА
   const fetchCartFromServer = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -39,7 +37,7 @@ function App() {
     }
   }, []);
 
-  // ❤️ 2. ХМАРНЕ ЗАВАНТАЖЕННЯ ОБРАНОГО: Функція отримання списку обраного з сервера
+  // ХМАРНЕ ЗАВАНТАЖЕННЯ ОБРАНОГО
   const fetchFavoritesFromServer = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -54,50 +52,42 @@ function App() {
       });
       if (response.ok) {
         const data = await response.json();
-        setFavoriteItems(data); // Записуємо масив чистих продуктів, отриманих від бекенду
+        setFavoriteItems(data);
       }
     } catch (error) {
       console.error('Помилка завантаження хмарного обраного:', error);
     }
   }, []);
 
-  // Синхронізація кошика, обраного та авторизації
+  // Синхронізація при зміні статусу авторизації в межах поточної вкладки
   useEffect(() => {
     if (isAuthenticated) {
       fetchCartFromServer();
-      fetchFavoritesFromServer(); // 🚀 Завантажуємо обране при успішній авторизації
+      fetchFavoritesFromServer();
     } else {
       setCartItems([]); 
-      setFavoriteItems([]); // Якщо користувач вийшов — очищуємо стейт обраного
+      setFavoriteItems([]);
     }
   }, [isAuthenticated, fetchCartFromServer, fetchFavoritesFromServer]);
 
-  // 🔄 Слухач подій localStorage для миттєвої синхронізації при вході/виході
+  // Слухач МІЖВКЛАДКОВОГО сховища (реагує, якщо зайшли/вийшли в іншій вкладці)
   useEffect(() => {
-    const handleStorageChange = () => {
-      const tokenExists = !!localStorage.getItem('token');
-      setIsAuthenticated(tokenExists);
-      if (tokenExists) {
-        fetchCartFromServer();
-        fetchFavoritesFromServer(); // 🚀 Синхронізуємо обране при змінах сесії
+    const handleStorageChange = (e) => {
+      // Реагуємо лише на зміни токена, щоб уникнути нескінченних циклів запитів
+      if (e.key === 'token') {
+        const tokenExists = !!localStorage.getItem('token');
+        setIsAuthenticated(tokenExists);
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [fetchCartFromServer, fetchFavoritesFromServer]);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
-
-  // 🔄 ХМАРНЕ ДОДАВАННЯ В КОШИК
+  // ХМАРНЕ ДОДАВАННЯ В КОШИК
   const addToCart = async (product) => {
     const token = localStorage.getItem('token');
-
-    if (!token) {
-      alert("Будь ласка, увійдіть в акаунт!");
-      return;
-    }
+    if (!token) return;
 
     try {
       const response = await fetch(`${API_URL}/cart/add`, {
@@ -110,16 +100,14 @@ function App() {
       });
 
       if (response.ok) {
-        fetchCartFromServer();
-        window.dispatchEvent(new Event('storage'));
+        fetchCartFromServer(); // Оновлюємо стейт локально без генерації зайвих подій
       }
     } catch (error) {
       console.error('Помилка додавання в хмарний кошик:', error);
     }
   };
 
-
-  // 🔄 ХМАРНЕ ВИДАЛЕННЯ З КОШИКА
+  // ХМАРНЕ ВИДАЛЕННЯ З КОШИКА
   const removeFromCart = async (id) => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -135,15 +123,13 @@ function App() {
 
       if (response.ok) {
         fetchCartFromServer();
-        window.dispatchEvent(new Event('storage'));
       }
     } catch (error) {
       console.error('Помилка видалення з хмарного кошика:', error);
     }
   };
 
-
-  // 🔄 ХМАРНА ЗМІНА КІЛЬКОСТІ ТОВАРУ
+  // ХМАРНА ЗМІНА КІЛЬКОСТІ ТОВАРУ
   const updateQuantity = async (id, newQuantity) => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -165,23 +151,16 @@ function App() {
 
       if (response.ok) {
         fetchCartFromServer();
-        window.dispatchEvent(new Event('storage'));
-      } else {
-        console.error('Сервер повернув помилку при оновленні кількості');
       }
     } catch (error) {
       console.error('Помилка оновлення кількості в хмарі:', error);
     }
   };
 
-  // ❤️ 3. ХМАРНЕ ДОДАВАННЯ/ВИДАЛЕННЯ З ОБРАНОГО (TOGGLE)
+  // ХМАРНИЙ ТOГЛ ОБРАНОГО
   const toggleFavorite = async (product) => {
     const token = localStorage.getItem('token');
-
-    if (!token) {
-      alert("Будь ласка, увійдіть в акаунт, щоб додавати товари в обране!");
-      return;
-    }
+    if (!token) return;
 
     try {
       const response = await fetch(`${API_URL}/favorites/toggle`, {
@@ -194,48 +173,43 @@ function App() {
       });
 
       if (response.ok) {
-        fetchFavoritesFromServer(); // Перемальовуємо актуальний стан з бази
-        window.dispatchEvent(new Event('storage'));
+        fetchFavoritesFromServer();
       }
     } catch (error) {
       console.error('Помилка зміни статусу обраного в хмарі:', error);
     }
   };
 
-  // ЛОКАЛЬНЕ ОЧИЩЕННЯ КОШИКА ПІСЛЯ ЗАМОВЛЕННЯ
   const clearCart = () => {
     setCartItems([]);
+  };
+
+  // Функція для чистого виходу з системи (передамо в Профіль та Шапку за потреби)
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
   };
 
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        {/* Передаємо кількість елементів у шапку сайту (за потреби можна додати й favoriteItems) */}
-        <Header cartItems={cartItems} favoriteItems={favoriteItems} />
+        <Header cartItems={cartItems} favoriteItems={favoriteItems} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
 
         <main>
           <Routes>
-            {/* Публічні сторінки */}
-            <Route path="/login" element={<AuthForm mode="login" />} />
-            <Route path="/register" element={<AuthForm mode="register" />} />
+            {/* Публічні роути для гостей */}
+            <Route path="/login" element={!isAuthenticated ? <AuthForm mode="login" /> : <Navigate to="/shop" />} />
+            <Route path="/register" element={!isAuthenticated ? <AuthForm mode="register" /> : <Navigate to="/shop" />} />
 
-            {/* Захищені сторінки */}
-            {/* 🚀 Передаємо стейт обраного та функцію toggleFavorite в каталог */}
+            {/* Захищені приватні роути */}
             <Route 
               path="/shop" 
-              element={<Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />} 
+              element={isAuthenticated ? <Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} /> : <Navigate to="/login" />} 
             />
 
-            {/* 🚀 Передаємо стейт обраного та функцію toggleFavorite на сторінку деталей товару */}
             <Route
               path="/product/:id"
-              element={
-                isAuthenticated ? (
-                  <ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
+              element={isAuthenticated ? <ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} /> : <Navigate to="/login" />}
             />
 
             <Route
@@ -254,7 +228,6 @@ function App() {
               }
             />
 
-            {/* 🚀 Оновлюємо роут Favorites: передаємо хмарні дані та функції зміни стану */}
             <Route
               path="/favorites"
               element={
@@ -272,11 +245,14 @@ function App() {
 
             <Route
               path="/profile"
-              element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+              element={isAuthenticated ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />}
             />
 
-            {/* Редирект з головної */}
+            {/* Розумний редирект з кореню */}
             <Route path="/" element={<Navigate to={isAuthenticated ? "/shop" : "/login"} />} />
+            
+            {/* Страховка від несучих роутів (404) */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
       </div>
