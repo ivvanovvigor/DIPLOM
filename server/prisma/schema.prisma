@@ -36,12 +36,15 @@ model Product {
   favoriteBy   FavoriteItem[]
 }
 
-// МОДЕЛЬ ЗАМОВЛЕННЯ
+// МОДЕЛЬ ЗАМОВЛЕННЯ (ОНОВЛЕНА)
 model Order {
-  id          Int      @id @default(autoincrement())
-  totalAmount Float
-  status      String   @default("Очікує")
-  createdAt   DateTime @default(now())
+  id            Int         @id @default(autoincrement())
+  totalAmount   Float
+  status        String      @default("Очікує")
+  createdAt     DateTime    @default(now())
+  phone         String?
+  address       String?
+  paymentMethod String?     @default("Online Оплата / Оплата частинами")
 
   // Зв'язок із користувачем
   userId Int
