@@ -7,6 +7,7 @@ import Shop from './Shop';
 import ProductDetails from './ProductDetails';
 import Cart from './Cart';
 import Favorites from './Favorites';
+import PrivacyPolicy from './PrivacyPolicy';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
@@ -30,7 +31,7 @@ function App() {
       });
       if (response.ok) {
         const data = await response.json();
-        setCartItems(data); 
+        setCartItems(data);
       }
     } catch (error) {
       console.error('Помилка завантаження хмарного кошика:', error);
@@ -65,7 +66,7 @@ function App() {
       fetchCartFromServer();
       fetchFavoritesFromServer();
     } else {
-      setCartItems([]); 
+      setCartItems([]);
       setFavoriteItems([]);
     }
   }, [isAuthenticated, fetchCartFromServer, fetchFavoritesFromServer]);
@@ -210,10 +211,12 @@ function App() {
             <Route path="/login" element={!isAuthenticated ? <AuthForm mode="login" /> : <Navigate to="/shop" />} />
             <Route path="/register" element={!isAuthenticated ? <AuthForm mode="register" /> : <Navigate to="/shop" />} />
 
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            
             {/* Захищені приватні роути */}
-            <Route 
-              path="/shop" 
-              element={isAuthenticated ? <Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} /> : <Navigate to="/login" />} 
+            <Route
+              path="/shop"
+              element={isAuthenticated ? <Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} /> : <Navigate to="/login" />}
             />
 
             <Route
@@ -241,10 +244,10 @@ function App() {
               path="/favorites"
               element={
                 isAuthenticated ? (
-                  <Favorites 
-                    favoriteItems={favoriteItems} 
-                    toggleFavorite={toggleFavorite} 
-                    addToCart={addToCart} 
+                  <Favorites
+                    favoriteItems={favoriteItems}
+                    toggleFavorite={toggleFavorite}
+                    addToCart={addToCart}
                   />
                 ) : (
                   <Navigate to="/login" />
@@ -259,7 +262,7 @@ function App() {
 
             {/* Розумний редирект з кореню */}
             <Route path="/" element={<Navigate to={isAuthenticated ? "/shop" : "/login"} />} />
-            
+
             {/* Страховка від неіснуючих роутів (404) */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

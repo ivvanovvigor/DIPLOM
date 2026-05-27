@@ -4,13 +4,18 @@ import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
 
 const AuthForm = ({ mode }) => {
-  const [formData, setFormData] = useState({ email: '', password: '', fullName: '' });
+  const [formData, setFormData] = useState({ email: '', password: '', fullName: '', agreed: false });
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (mode === 'register' && !formData.agreed) {
+      showToast("Будь ласка, погодьтеся на обробку персональних даних", "error");
+      return;
+    }
 
     // Перевірка загального формату електронної пошти
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,7 +75,7 @@ const AuthForm = ({ mode }) => {
         } else {
           // Скидання системних маркерів перед переходом на авторизацію
           localStorage.removeItem('token');
-          
+
           window.dispatchEvent(new Event('authChange'));
           window.dispatchEvent(new Event('storage'));
           window.dispatchEvent(new Event('favoritesUpdated'));
@@ -98,14 +103,34 @@ const AuthForm = ({ mode }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
-            <input
-              type="text"
-              placeholder="Повне ім'я"
-              value={formData.fullName}
-              className="w-full p-3 border border-gray-200 focus:border-black outline-none transition text-sm rounded-none"
-              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-              required
-            />
+            <>
+              <input
+                type="text"
+                placeholder="Повне ім'я"
+                value={formData.fullName}
+                className="w-full p-3 border border-gray-200 focus:border-black outline-none transition text-sm rounded-none"
+                // Використання spread оператора { ...formData } зберігає значення чекбокса (agreed)
+                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                required
+              />
+
+              <div className="flex items-center text-xs text-gray-500 mb-4 mt-4">
+                <input
+                  type="checkbox"
+                  id="agree"
+                  checked={formData.agreed || false}
+                  className="mr-2"
+                  onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
+                  required
+                />
+                <label htmlFor="agree">
+                  Я погоджуюсь з
+                  <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline ml-1">
+                    Політикою конфіденційності
+                  </a>
+                </label>
+              </div>
+            </>
           )}
           <input
             type="email"
