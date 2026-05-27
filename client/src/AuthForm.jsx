@@ -103,35 +103,16 @@ const AuthForm = ({ mode }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
-            <>
-              <input
-                type="text"
-                placeholder="Повне ім'я"
-                value={formData.fullName}
-                className="w-full p-3 border border-gray-200 focus:border-black outline-none transition text-sm rounded-none"
-                // Використання spread оператора { ...formData } зберігає значення чекбокса (agreed)
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                required
-              />
-
-              <div className="flex items-center text-xs text-gray-500 mb-4 mt-4">
-                <input
-                  type="checkbox"
-                  id="agree"
-                  checked={formData.agreed || false}
-                  className="mr-2"
-                  onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
-                  required
-                />
-                <label htmlFor="agree">
-                  Я погоджуюсь з
-                  <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline ml-1">
-                    Політикою конфіденційності
-                  </a>
-                </label>
-              </div>
-            </>
+            <input
+              type="text"
+              placeholder="Повне ім'я"
+              value={formData.fullName}
+              className="w-full p-3 border border-gray-200 focus:border-black outline-none transition text-sm rounded-none"
+              onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+              required
+            />
           )}
+
           <input
             type="email"
             placeholder="Email"
@@ -140,6 +121,7 @@ const AuthForm = ({ mode }) => {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
+
           <input
             type="password"
             placeholder="Пароль"
@@ -148,6 +130,27 @@ const AuthForm = ({ mode }) => {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
           />
+
+          {/* Ось тут чекбокс буде під усіма полями */}
+          {mode === 'register' && (
+            <div className="flex items-center text-xs text-gray-500 mb-4 mt-4">
+              <input
+                type="checkbox"
+                id="agree"
+                checked={formData.agreed || false}
+                className="mr-2"
+                onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
+                required
+              />
+              <label htmlFor="agree">
+                Я погоджуюсь з
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline ml-1">
+                  Політикою конфіденційності
+                </a>
+              </label>
+            </div>
+          )}
+
           <button className="w-full bg-black text-white p-3 hover:bg-gray-800 transition font-bold uppercase text-xs tracking-widest rounded-none">
             {mode === 'register' ? 'Зареєструватися' : 'Увійти'}
           </button>
