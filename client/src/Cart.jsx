@@ -82,64 +82,73 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Список товарів */}
-            <div className="lg:col-span-2 space-y-4">
-              {cartItems.map(item => (
-                <div key={item.id} className="bg-white p-6 flex justify-between items-center border">
+            {/* Список товарів */ }
+              < div className="lg:col-span-2 space-y-4">
+            {cartItems.map(item => (
+              <div key={item.id} className="bg-white p-6 flex justify-between items-center border">
+                <div className="flex items-center gap-4">
+                  {/* Додаємо фото товару */}
+                  <img
+                    src={item.product?.imageUrl || '/placeholder.jpg'}
+                    alt={item.product?.title}
+                    className="w-16 h-16 object-cover"
+                  />
                   <div>
                     <h3 className="font-bold text-sm uppercase">{item.product?.title || item.title}</h3>
                     <p className="text-xs text-gray-500">{(item.product?.price || item.price || 0).toFixed(2)} UAH</p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                    <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-[10px] font-bold uppercase">Видалити</button>
-                  </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="flex items-center gap-4">
+                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
+                  <span>{item.quantity}</span>
+                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                  <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-[10px] font-bold uppercase">Видалити</button>
+                </div>
+              </div>
+            ))}
+          </div>
 
             {/* Блок оформлення (всередині grid) */}
-            <div className="bg-white p-6 border h-fit space-y-6">
-              <h2 className="text-xs font-black uppercase text-gray-400 border-b pb-3">Оформлення</h2>
-              
-              <div className="space-y-4">
-                <input
-                  type="tel"
-                  placeholder="(+38) XXX-XXX-XX-XX"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-2 border text-sm"
-                />
-                <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
-              </div>
+        <div className="bg-white p-6 border h-fit space-y-6">
+          <h2 className="text-xs font-black uppercase text-gray-400 border-b pb-3">Оформлення</h2>
 
-              <div className="border-t pt-4">
-                <h3 className="text-xs font-black uppercase text-gray-400 mb-3">Спосіб оплати</h3>
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-3 cursor-pointer text-sm">
-                    <input type="radio" value="Online Оплата / Оплата частинами" checked={paymentMethod === 'Online Оплата / Оплата частинами'} onChange={(e) => setPaymentMethod(e.target.value)} />
-                    <span>Online Оплата / Оплата частинами</span>
-                  </label>
-                  <label className="flex items-center space-x-3 cursor-pointer text-sm">
-                    <input type="radio" value="Оплата при отриманні" checked={paymentMethod === 'Оплата при отриманні'} onChange={(e) => setPaymentMethod(e.target.value)} />
-                    <span>Оплата при отриманні</span>
-                  </label>
-                </div>
-              </div>
+          <div className="space-y-4">
+            <input
+              type="tel"
+              placeholder="(+38) XXX-XXX-XX-XX"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full p-2 border text-sm"
+            />
+            <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
+          </div>
 
-              <div className="border-t pt-4">
-                <p className="text-xl font-black text-blue-600 mb-4">{finalTotal.toFixed(2)} UAH</p>
-                <button onClick={handleCheckoutSubmit} disabled={isSubmitting} className="w-full bg-black text-white py-3 uppercase text-xs font-bold">
-                  {isSubmitting ? 'Оформлюється...' : 'Підтвердити замовлення'}
-                </button>
-              </div>
+          <div className="border-t pt-4">
+            <h3 className="text-xs font-black uppercase text-gray-400 mb-3">Спосіб оплати</h3>
+            <div className="space-y-3">
+              <label className="flex items-center space-x-3 cursor-pointer text-sm">
+                <input type="radio" value="Online Оплата / Оплата частинами" checked={paymentMethod === 'Online Оплата / Оплата частинами'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                <span>Online Оплата / Оплата частинами</span>
+              </label>
+              <label className="flex items-center space-x-3 cursor-pointer text-sm">
+                <input type="radio" value="Оплата при отриманні" checked={paymentMethod === 'Оплата при отриманні'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                <span>Оплата при отриманні</span>
+              </label>
             </div>
           </div>
-        )}
+
+          <div className="border-t pt-4">
+            <p className="text-xl font-black text-blue-600 mb-4">{finalTotal.toFixed(2)} UAH</p>
+            <button onClick={handleCheckoutSubmit} disabled={isSubmitting} className="w-full bg-black text-white py-3 uppercase text-xs font-bold">
+              {isSubmitting ? 'Оформлюється...' : 'Підтвердити замовлення'}
+            </button>
+          </div>
+        </div>
       </div>
+        )}
     </div>
+    </div >
   );
 };
 

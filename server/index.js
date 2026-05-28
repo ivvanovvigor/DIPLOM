@@ -64,8 +64,20 @@ app.get('/api/products', async (req, res) => {
 
 // --- CART ---
 app.get('/api/cart', authenticateToken, async (req, res) => {
-  const cartItems = await prisma.cartItem.findMany({ where: { userId: req.user.userId }, include: { product: true } });
-  res.json(cartItems.map(item => ({ id: item.id, productId: item.product.id, title: item.product.title, price: item.product.price, quantity: item.quantity })));
+  const cartItems = await prisma.cartItem.findMany({
+    where: { userId: req.user.userId },
+    include: { product: true },
+    orderBy: { id: 'asc' }
+  });
+
+  res.json(cartItems.map(item => ({
+    id: item.id,
+    productId: item.product.id,
+    title: item.product.title,
+    price: item.product.price,
+    quantity: item.quantity,
+    imageUrl: item.product.imageUrl
+  })));
 });
 
 app.post('/api/cart/add', authenticateToken, async (req, res) => {
