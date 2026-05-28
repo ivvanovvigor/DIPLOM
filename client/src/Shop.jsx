@@ -94,12 +94,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
               type="number"
               placeholder="Мін"
               value={minPrice}
-              onChange={(e) => {
-                const val = Number(e.target.value);
-                setMinPrice(val);
-                // АВТОМАТИЧНА КОРЕКЦІЯ:
-                if (val > maxPrice) setMaxPrice(val);
-              }}
+              onChange={(e) => setMinPrice(Number(e.target.value))}
               className="w-1/2 bg-gray-50 border border-gray-200 p-2 text-xs outline-none focus:border-black"
             />
             <input
