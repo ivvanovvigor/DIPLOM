@@ -119,24 +119,18 @@ app.post('/api/favorites/toggle', authenticateToken, async (req, res) => {
 app.post('/api/orders', authenticateToken, async (req, res) => {
   const { cartItems, totalAmount, phone, address, paymentMethod } = req.body;
 
-  console.log("Отримані дані:", { phone, address, paymentMethod, totalAmount });
-
-  if (!phone || !address) {
-    return res.status(400).json({ message: 'Відсутні дані для доставки' });
-  }
-
   try {
     const order = await prisma.$transaction(async (tx) => {
       return await tx.order.create({
         data: {
           userId: Number(req.user.userId),
           totalAmount: Number(totalAmount),
-          phone: String(phone),      // Переконуємось, що це рядок
-          address: String(address),  // Переконуємось, що це рядок
+          phone: String(phone),
+          address: String(address),
           paymentMethod: String(paymentMethod),
           items: {
             create: cartItems.map(item => ({
-              productId: item.productId,
+              productId: Number(item.productId), // Пряме використання ID
               quantity: Number(item.quantity),
               price: Number(item.price)
             }))
@@ -146,7 +140,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     });
     res.status(201).json({ orderId: order.id });
   } catch (e) {
-    console.error("ПОМИЛКА PRISMA:", e); // Це виведе детальну помилку в логи Render
+    console.error("ПОМИЛКА PRISMA:", e);
     res.status(500).json({ message: 'Помилка при створенні замовлення' });
   }
 });

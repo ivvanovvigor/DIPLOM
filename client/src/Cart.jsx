@@ -70,7 +70,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           paymentMethod: paymentMethod === 'online' ? 'Online' : 'При отриманні',
           // ЗМІНИ ТУТ:
           cartItems: cartItems.map(item => ({
-            product: { connect: { id: Number(item.productId || item.id) } },
+            productId: Number(item.productId || item.id), // Передаємо саме ID товару
             quantity: Number(item.quantity),
             price: Number(item.product?.price || item.price || 0)
           }))
