@@ -8,7 +8,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { user, token } = useAuth();
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
@@ -23,8 +23,6 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
   const deliveryPrice = totalItemsPrice > 2000 || totalItemsPrice === 0 ? 0 : 150;
   let finalTotal = totalItemsPrice + deliveryPrice;
-  
-  // Знижка 2% при онлайн оплаті
   const discount = paymentMethod === 'Online Оплата / Оплата частинами' ? finalTotal * 0.02 : 0;
   finalTotal -= discount;
 
@@ -60,10 +58,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Помилка при оформленні");
-      }
+      if (!response.ok) throw new Error("Помилка при оформленні");
 
       showToast('Замовлення успішно оформлено!', 'success');
       if (typeof clearCart === 'function') clearCart();
@@ -87,6 +82,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Список товарів */}
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map(item => (
                 <div key={item.id} className="bg-white p-6 flex justify-between items-center border">
@@ -104,30 +100,36 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
               ))}
             </div>
 
-            <div className="bg-white p-6 border h-fit">
-              <h2 className="text-xs font-black uppercase text-gray-400 border-b pb-3 mb-4">Спосіб оплати</h2>
-              <div className="space-y-3 mb-6">
-                <label className="flex items-center space-x-3 cursor-pointer text-sm">
-                  <input type="radio" value="Online Оплата / Оплата частинами" checked={paymentMethod === 'Online Оплата / Оплата частинами'} onChange={(e) => setPaymentMethod(e.target.value)} />
-                  <span>Online Оплата / Оплата частинами</span>
-                </label>
-                <div className="text-[10px] bg-blue-50 p-2 border border-blue-200">Економія 2% на післяплаті</div>
-                <label className="flex items-center space-x-3 cursor-pointer text-sm">
-                  <input type="radio" value="Оплата при отриманні" checked={paymentMethod === 'Оплата при отриманні'} onChange={(e) => setPaymentMethod(e.target.value)} />
-                  <span>Оплата при отриманні</span>
-                </label>
+            {/* Блок оформлення (всередині grid) */}
+            <div className="bg-white p-6 border h-fit space-y-6">
+              <h2 className="text-xs font-black uppercase text-gray-400 border-b pb-3">Оформлення</h2>
+              
+              <div className="space-y-4">
+                <input
+                  type="tel"
+                  placeholder="(+38) XXX-XXX-XX-XX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full p-2 border text-sm"
+                />
+                <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
               </div>
 
-              <input
-                type="tel"
-                placeholder="(+38) XXX-XXX-XX-XX"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full p-2 border text-sm mb-4"
-              />
-              <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
-              
-              <div className="mt-6 pt-4 border-t">
+              <div className="border-t pt-4">
+                <h3 className="text-xs font-black uppercase text-gray-400 mb-3">Спосіб оплати</h3>
+                <div className="space-y-3">
+                  <label className="flex items-center space-x-3 cursor-pointer text-sm">
+                    <input type="radio" value="Online Оплата / Оплата частинами" checked={paymentMethod === 'Online Оплата / Оплата частинами'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                    <span>Online Оплата / Оплата частинами</span>
+                  </label>
+                  <label className="flex items-center space-x-3 cursor-pointer text-sm">
+                    <input type="radio" value="Оплата при отриманні" checked={paymentMethod === 'Оплата при отриманні'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                    <span>Оплата при отриманні</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
                 <p className="text-xl font-black text-blue-600 mb-4">{finalTotal.toFixed(2)} UAH</p>
                 <button onClick={handleCheckoutSubmit} disabled={isSubmitting} className="w-full bg-black text-white py-3 uppercase text-xs font-bold">
                   {isSubmitting ? 'Оформлюється...' : 'Підтвердити замовлення'}

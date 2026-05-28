@@ -18,7 +18,7 @@ function AppContent() {
   const [cartItems, setCartItems] = useState([]);
   const [favoriteItems, setFavoriteItems] = useState([]);
 
-  // --- ХМАРНЕ ЗАВАНТАЖЕННЯ ---
+  // Оновлення кошика з сервера
   const fetchCartFromServer = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -26,8 +26,11 @@ function AppContent() {
       const response = await fetch(`${API_URL}/cart`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
-      if (response.ok) setCartItems(await response.json());
-    } catch (e) { console.error('Помилка завантаження кошика:', e); }
+      if (response.ok) {
+        const data = await response.json();
+        setCartItems(data);
+      }
+    } catch (e) { console.error('Помилка кошика:', e); }
   }, []);
 
   const fetchFavoritesFromServer = useCallback(async () => {
@@ -38,37 +41,20 @@ function AppContent() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       if (response.ok) setFavoriteItems(await response.json());
-    } catch (e) { console.error('Помилка завантаження обраного:', e); }
+    } catch (e) { console.error('Помилка обраного:', e); }
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchCartFromServer();
       fetchFavoritesFromServer();
-    } else {
-      setCartItems([]);
-      setFavoriteItems([]);
     }
   }, [isAuthenticated, fetchCartFromServer, fetchFavoritesFromServer]);
 
-  // --- СИНХРОНІЗАЦІЯ ---
-  useEffect(() => {
-    const syncAuth = () => setIsAuthenticated(!!localStorage.getItem('token'));
-    window.addEventListener('storage', syncAuth);
-    window.addEventListener('authChange', syncAuth);
-    return () => {
-      window.removeEventListener('storage', syncAuth);
-      window.removeEventListener('authChange', syncAuth);
-    };
-  }, []);
-
-  // --- ФУНКЦІЇ ДІЙ (КОШИК) ---
+  // Дії з кошиком
   const addToCart = async (product) => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      showToast("Увійдіть у систему, щоб додати товар у кошик", "error");
-      return;
-    }
+    if (!token) { showToast("Увійдіть у систему", "error"); return; }
     try {
       const response = await fetch(`${API_URL}/cart/add`, {
         method: 'POST',
@@ -81,53 +67,38 @@ function AppContent() {
 
   const removeFromCart = async (id) => {
     const token = localStorage.getItem('token');
-    if (!token) return;
     try {
       const response = await fetch(`${API_URL}/cart/remove/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) fetchCartFromServer();
     } catch (e) { console.error(e); }
   };
 
   const updateQuantity = async (id, newQuantity) => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
     if (newQuantity <= 0) { removeFromCart(id); return; }
+    const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`${API_URL}/cart/update`, {
+      await fetch(`${API_URL}/cart/update`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, quantity: newQuantity })
       });
-      if (response.ok) fetchCartFromServer();
+      fetchCartFromServer();
     } catch (e) { console.error(e); }
   };
 
-  // --- ОБРАНЕ ---
-  const toggleFavorite = async (product) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      showToast("Ця функція доступна лише для авторизованих користувачів", "error");
-      return;
-    }
-    try {
-      const response = await fetch(`${API_URL}/favorites/toggle`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId: product.id })
-      });
-      if (response.ok) fetchFavoritesFromServer();
-    } catch (e) { console.error(e); }
+  // ФУНКЦІЯ ОЧИЩЕННЯ: Оновлює UI одразу після замовлення
+  const clearCart = () => {
+    setCartItems([]);
   };
-
-  const clearCart = () => setCartItems([]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
-    window.dispatchEvent(new Event('authChange'));
+    setCartItems([]);
+    setFavoriteItems([]);
   };
 
   return (
@@ -136,16 +107,14 @@ function AppContent() {
         <Header cartItems={cartItems} favoriteItems={favoriteItems} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
         <main>
           <Routes>
-            <Route path="/login" element={!isAuthenticated ? <AuthForm mode="login" /> : <Navigate to="/shop" />} />
-            <Route path="/register" element={!isAuthenticated ? <AuthForm mode="register" /> : <Navigate to="/shop" />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/shop" element={<Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />} />
-            <Route path="/product/:id" element={isAuthenticated ? <ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} /> : <Navigate to="/login" />} />
-            <Route path="/cart" element={isAuthenticated ? <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} clearCart={clearCart} /> : <Navigate to="/login" />} />
-            <Route path="/favorites" element={isAuthenticated ? <Favorites favoriteItems={favoriteItems} toggleFavorite={toggleFavorite} addToCart={addToCart} /> : <Navigate to="/login" />} />
+            <Route path="/shop" element={<Shop addToCart={addToCart} />} />
+            <Route path="/cart" element={isAuthenticated ? 
+              <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} clearCart={clearCart} /> 
+              : <Navigate to="/login" />} 
+            />
+            <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setIsAuthenticated(true)} />} />
             <Route path="/profile" element={isAuthenticated ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
-            <Route path="/" element={<Navigate to="/shop" replace />} />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<Navigate to="/shop" />} />
           </Routes>
         </main>
       </div>
@@ -154,9 +123,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <ToastProvider>
-      <AppContent />
-    </ToastProvider>
-  );
+  return <ToastProvider><AppContent /></ToastProvider>;
 }
