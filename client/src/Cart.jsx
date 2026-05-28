@@ -148,14 +148,9 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                 />
 
                 {/* Динамічний вибір адреси */}
-                <NPAddressSelector onAddressChange={(cityName) => setCity(cityName)} />
-
-                <input
-                  type="text"
-                  placeholder="Вкажіть номер відділення"
-                  value={warehouse}
-                  onChange={(e) => setWarehouse(e.target.value)}
-                  className="w-full p-2 border text-sm"
+                <NPAddressSelector
+                  onCityChange={(city) => setCity(city)}
+                  onWarehouseChange={(warehouse) => setWarehouse(warehouse)}
                 />
               </div>
 
