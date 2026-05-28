@@ -6,7 +6,8 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Всі');
-  const [priceRange, setPriceRange] = useState(40000);
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(40000);
   const [sortBy, setSortBy] = useState('default');
   const [toastMessage, setToastMessage] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -27,7 +28,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
     let result = [...products];
     if (activeCategory !== 'Всі') result = result.filter(p => p.category === activeCategory);
     if (searchQuery) result = result.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
-    result = result.filter(p => p.price <= priceRange);
+    result = result.filter(p => p.price >= minPrice && p.price <= maxPrice);
 
     if (sortBy === 'low-to-high') result.sort((a, b) => a.price - b.price);
     else if (sortBy === 'high-to-low') result.sort((a, b) => b.price - a.price);
@@ -87,11 +88,40 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         </div>
 
         <div className="mb-8">
-          <label className="block text-[10px] font-bold uppercase text-gray-400 mb-4">Ціна до: <span className="text-black">{priceRange} грн</span></label>
-          <input type="range" min="0" max="40000" step="100" value={priceRange} onChange={(e) => setPriceRange(Number(e.target.value))} className="w-full accent-black cursor-pointer" />
+          <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Ціна (грн)</label>
+          <div className="flex space-x-2">
+            <input
+              type="number"
+              placeholder="Мін"
+              value={minPrice}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setMinPrice(val);
+                // АВТОМАТИЧНА КОРЕКЦІЯ:
+                if (val > maxPrice) setMaxPrice(val);
+              }}
+              className="w-1/2 bg-gray-50 border border-gray-200 p-2 text-xs outline-none focus:border-black"
+            />
+            <input
+              type="number"
+              placeholder="Макс"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(Number(e.target.value))}
+              className="w-1/2 bg-gray-50 border border-gray-200 p-2 text-xs outline-none focus:border-black"
+            />
+          </div>
         </div>
 
-        <button onClick={() => { setSearchQuery(''); setActiveCategory('Всі'); setPriceRange(40000); setSortBy('default'); }} className="w-full py-2 text-[10px] font-bold uppercase border border-black hover:bg-black hover:text-white transition rounded-none">
+        <button
+          onClick={() => {
+            setSearchQuery('');
+            setActiveCategory('Всі');
+            setMinPrice(0);       // Скидання мін
+            setMaxPrice(40000);   // Скидання макс
+            setSortBy('default');
+          }}
+          className="w-full py-2 text-[10px] font-bold uppercase border border-black hover:bg-black hover:text-white transition rounded-none"
+        >
           Скинути фільтри
         </button>
       </aside>
