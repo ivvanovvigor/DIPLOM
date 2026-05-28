@@ -118,15 +118,23 @@ app.post('/api/favorites/toggle', authenticateToken, async (req, res) => {
 // --- ORDERS ---
 app.post('/api/orders', authenticateToken, async (req, res) => {
   const { cartItems, totalAmount, phone, address, paymentMethod } = req.body;
+
+  // ДОДАЙТЕ ЦЕ ДЛЯ ДІАГНОСТИКИ:
+  console.log("Отримані дані:", { phone, address, paymentMethod, totalAmount });
+
+  if (!phone || !address) {
+    return res.status(400).json({ message: 'Відсутні дані для доставки' });
+  }
+
   try {
     const order = await prisma.$transaction(async (tx) => {
-      const newOrder = await tx.order.create({
+      return await tx.order.create({
         data: {
           userId: Number(req.user.userId),
           totalAmount: Number(totalAmount),
-          phone: phone || "Не вказано",
-          address: address || "Не вказано",
-          paymentMethod: paymentMethod || "Не вказано",
+          phone: String(phone),      // Переконуємось, що це рядок
+          address: String(address),  // Переконуємось, що це рядок
+          paymentMethod: String(paymentMethod),
           items: {
             create: cartItems.map(item => ({
               productId: Number(item.productId),
@@ -136,11 +144,12 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
           }
         }
       });
-      await tx.cartItem.deleteMany({ where: { userId: Number(req.user.userId) } });
-      return newOrder;
     });
     res.status(201).json({ orderId: order.id });
-  } catch (e) { res.status(500).json({ message: 'Помилка замовлення' }); }
+  } catch (e) {
+    console.error("ПОМИЛКА PRISMA:", e); // Це виведе детальну помилку в логи Render
+    res.status(500).json({ message: 'Помилка при створенні замовлення' });
+  }
 });
 
 // --- НОВА ПОШТА ---
