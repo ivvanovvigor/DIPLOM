@@ -261,7 +261,7 @@ function App() {
             />
 
             {/* Розумний редирект з кореню */}
-            <Route path="/" element={<Navigate to={isAuthenticated ? "/shop" : "/login"} />} />
+            <Route path="/" element={<Navigate to="/shop" replace />} />
 
             {/* Страховка від неіснуючих роутів (404) */}
             <Route path="*" element={<Navigate to="/" />} />
