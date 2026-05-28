@@ -219,7 +219,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
                   </button>
 
                   <button
-                    onClick={() => handleToggleFavoriteClick(product)}
+                    onClick={() => toggleFavorite && toggleFavorite(product)}
                     className={`w-9 h-9 border border-black flex items-center justify-center transition rounded-none ${isFavorite ? 'bg-black text-white' : 'bg-white text-black hover:bg-gray-100'}`}
                   >
                     <svg
