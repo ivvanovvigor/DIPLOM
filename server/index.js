@@ -120,28 +120,26 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
   const { cartItems, totalAmount, phone, address, paymentMethod } = req.body;
 
   try {
-    const order = await prisma.$transaction(async (tx) => {
-      return await tx.order.create({
-        data: {
-          userId: Number(req.user.userId),
-          totalAmount: Number(totalAmount),
-          phone: String(phone),
-          address: String(address),
-          paymentMethod: String(paymentMethod),
-          items: {
-            create: cartItems.map(item => ({
-              productId: Number(item.productId), // Пряме використання ID
-              quantity: Number(item.quantity),
-              price: Number(item.price)
-            }))
-          }
+    const order = await prisma.order.create({
+      data: {
+        userId: Number(req.user.userId),
+        totalAmount: Number(totalAmount),
+        phone: String(phone),
+        address: String(address),
+        paymentMethod: String(paymentMethod),
+        items: {
+          create: cartItems.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price
+          }))
         }
-      });
+      }
     });
-    res.status(201).json({ orderId: order.id });
-  } catch (e) {
-    console.error("ПОМИЛКА PRISMA:", e);
-    res.status(500).json({ message: 'Помилка при створенні замовлення' });
+    res.status(201).json(order);
+  } catch (error) {
+    console.error("Помилка Prisma:", error);
+    res.status(500).json({ message: "Помилка сервера" });
   }
 });
 
