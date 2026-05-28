@@ -68,10 +68,11 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
           phone,
           address: `м. ${city}, ${warehouse}`,
           paymentMethod: paymentMethod === 'online' ? 'Online' : 'При отриманні',
+          // ЗМІНИ ТУТ:
           cartItems: cartItems.map(item => ({
-            id: item.productId || item.id,
-            quantity: item.quantity,
-            price: item.product ? item.product.price : (item.price || 0)
+            product: { connect: { id: Number(item.productId || item.id) } },
+            quantity: Number(item.quantity),
+            price: Number(item.product?.price || item.price || 0)
           }))
         }),
       });

@@ -119,7 +119,6 @@ app.post('/api/favorites/toggle', authenticateToken, async (req, res) => {
 app.post('/api/orders', authenticateToken, async (req, res) => {
   const { cartItems, totalAmount, phone, address, paymentMethod } = req.body;
 
-  // ДОДАЙТЕ ЦЕ ДЛЯ ДІАГНОСТИКИ:
   console.log("Отримані дані:", { phone, address, paymentMethod, totalAmount });
 
   if (!phone || !address) {
@@ -137,7 +136,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
           paymentMethod: String(paymentMethod),
           items: {
             create: cartItems.map(item => ({
-              productId: Number(item.productId),
+              productId: item.productId,
               quantity: Number(item.quantity),
               price: Number(item.price)
             }))
