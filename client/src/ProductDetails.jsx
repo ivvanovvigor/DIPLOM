@@ -36,7 +36,7 @@ const ProductDetails = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
-        <p className="text-sm italic text-gray-400 mb-4">Товар не знайдено 🏍️</p>
+        <p className="text-sm italic text-gray-400 mb-4">Товар не знайдено</p>
         <Link to="/" className="text-xs font-bold uppercase border-b border-black pb-1">Назад до каталогу</Link>
       </div>
     );

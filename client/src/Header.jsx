@@ -17,6 +17,13 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
     return sum + (price * item.quantity);
   }, 0);
 
+  // Допоміжна функція для отримання коректного URL фото
+  const getImageUrl = (item) => {
+    const url = item.product?.imageUrl || item.imageUrl || '';
+    if (url.startsWith('http')) return url;
+    return url ? `${import.meta.env.VITE_API_URL}${url}` : '/placeholder.jpg';
+  };
+
   const handleLogoutClick = () => {
     logout();
     showToast("Ви успішно вийшли з системи", "success");
@@ -26,30 +33,24 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
   return (
     <header className="w-full bg-white border-b border-gray-100 px-6 py-5 md:px-12 sticky top-0 z-50">
       <div className="w-full flex justify-between items-center">
-
-        {/* Логотип */}
+        
         <Link to="/" className="text-lg font-black uppercase tracking-widest text-black hover:opacity-80 transition">
           MOTO STORE
         </Link>
 
-        {/* Навігація */}
         <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
-
-          {/* Обране */}
           <Link to="/favorites" className="text-xs font-black uppercase tracking-widest text-black hover:opacity-70 transition flex items-center">
             <svg className="h-6 w-6 fill-black mr-1" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" /></svg>
             <span className="hidden md:inline">Обране</span>
             <span className="bg-gray-100 border border-black px-1.5 ml-1">{favCount}</span>
           </Link>
 
-          {/* Кошик */}
           <div className="relative">
             <button onClick={() => setIsCartOpen(!isCartOpen)} className="relative p-1">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 0a2 2 0 100 4 2 2 0 000-4z" /></svg>
               {cartCount > 0 && <span className="absolute -top-1 -right-1.5 bg-black text-white text-[9px] font-bold px-1.5">{cartCount}</span>}
             </button>
 
-            {/* Модалка */}
             {isCartOpen && (
               <div className="absolute right-0 mt-4 w-80 bg-white border border-gray-200 p-4 shadow-xl z-50">
                 <h3 className="text-[10px] font-black uppercase text-gray-400 border-b pb-2 mb-3">Ваш кошик</h3>
@@ -57,23 +58,23 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
                   <p className="text-gray-400 text-xs text-center py-6">Кошик порожній</p>
                 ) : (
                   <>
-                    <div className="max-h-60 overflow-y-auto"> {/* Прибираємо зайві відступи, якщо вони там є */}
+                    <div className="max-h-60 overflow-y-auto">
                       {cartItems.map((item) => (
-                        <div
-                          key={item.id}
-                          // Використовуємо border-b тільки для товарів, ОКРІМ останнього
-                          className="flex justify-between items-center py-3 border-b border-gray-100 last:border-none"
-                        >
-                          <div className="text-xs">
-                            <p className="font-bold uppercase">{item.title || item.product?.title}</p>
-                            <p className="text-[10px] text-gray-500">{item.quantity} × {item.price || item.product?.price} UAH</p>
+                        <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-none">
+                          <div className="flex items-center">
+                            {/* ДОДАНО: Фото товару з бази */}
+                            <img 
+                              src={getImageUrl(item)} 
+                              alt={item.title || item.product?.title} 
+                              className="w-12 h-12 object-cover mr-3 border border-gray-50"
+                              onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                            />
+                            <div className="text-xs">
+                              <p className="font-bold uppercase">{item.title || item.product?.title}</p>
+                              <p className="text-[10px] text-gray-500">{item.quantity} × {item.price || item.product?.price} UAH</p>
+                            </div>
                           </div>
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="text-gray-300 hover:text-red-500 transition"
-                          >
-                            ✕
-                          </button>
+                          <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 transition">✕</button>
                         </div>
                       ))}
                     </div>
@@ -87,7 +88,6 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
             )}
           </div>
 
-          {/* Авторизація */}
           {token ? (
             <div className="flex items-center space-x-4 border-l pl-4">
               <Link to="/profile" className="text-xs font-bold uppercase">Кабінет</Link>
