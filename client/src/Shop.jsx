@@ -24,10 +24,13 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
       .catch((err) => console.error("Помилка при отриманні товарів:", err));
   }, []);
 
+  // Оновлений useEffect: priceRange замінено на minPrice та maxPrice
   useEffect(() => {
     let result = [...products];
     if (activeCategory !== 'Всі') result = result.filter(p => p.category === activeCategory);
     if (searchQuery) result = result.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Фільтрація за новим діапазоном ціни
     result = result.filter(p => p.price >= minPrice && p.price <= maxPrice);
 
     if (sortBy === 'low-to-high') result.sort((a, b) => a.price - b.price);
@@ -35,7 +38,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
     else if (sortBy === 'popular') result.sort((a, b) => (b.views || 0) - (a.views || 0));
 
     setFilteredProducts(result);
-  }, [searchQuery, activeCategory, priceRange, sortBy, products]);
+  }, [searchQuery, activeCategory, minPrice, maxPrice, sortBy, products]);
 
   useEffect(() => {
     if (toastMessage) {
@@ -53,7 +56,6 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
 
   const handleToggleFavoriteClick = async (product) => {
     if (toggleFavorite) {
-      // Перевіряємо статус ПЕРЕД викликом
       const isAlreadyFavorite = favoriteItems.some(item => item.id === product.id);
       await toggleFavorite(product);
       setToastMessage(isAlreadyFavorite ? `Видалено з обраного` : `Додано в обране!`);
@@ -94,7 +96,11 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
               type="number"
               placeholder="Мін"
               value={minPrice}
-              onChange={(e) => setMinPrice(Number(e.target.value))}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setMinPrice(val);
+                if (val > maxPrice) setMaxPrice(val);
+              }}
               className="w-1/2 bg-gray-50 border border-gray-200 p-2 text-xs outline-none focus:border-black"
             />
             <input
@@ -111,8 +117,8 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
           onClick={() => {
             setSearchQuery('');
             setActiveCategory('Всі');
-            setMinPrice(0);       // Скидання мін
-            setMaxPrice(40000);   // Скидання макс
+            setMinPrice(0);
+            setMaxPrice(40000);
             setSortBy('default');
           }}
           className="w-full py-2 text-[10px] font-bold uppercase border border-black hover:bg-black hover:text-white transition rounded-none"
