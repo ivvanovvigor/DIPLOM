@@ -8,7 +8,7 @@ import ProductDetails from './ProductDetails';
 import Cart from './Cart';
 import Favorites from './Favorites';
 import PrivacyPolicy from './PrivacyPolicy';
-import { ToastProvider, useToast, ToastContainer } from './ToastContext';
+import { ToastProvider, useToast } from './ToastContext';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
@@ -133,7 +133,6 @@ function AppContent() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <ToastContainer />
         <Header cartItems={cartItems} favoriteItems={favoriteItems} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
         <main>
           <Routes>
