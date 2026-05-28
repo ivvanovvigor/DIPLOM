@@ -37,7 +37,7 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) return res.status(400).json({ message: 'Користувач вже існує' });
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({ data: { email, fullName, passwordHash: hashedPassword } });
     res.status(201).json({ userId: newUser.id });
@@ -72,10 +72,47 @@ app.post('/api/cart/add', authenticateToken, async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.user.userId;
   const existing = await prisma.cartItem.findFirst({ where: { userId, productId: Number(productId) } });
-  
+
   if (existing) await prisma.cartItem.update({ where: { id: existing.id }, data: { quantity: existing.quantity + (quantity || 1) } });
   else await prisma.cartItem.create({ data: { userId, productId: Number(productId), quantity: quantity || 1 } });
   res.json({ message: 'Додано' });
+});
+
+// --- FAVORITES ---
+app.get('/api/favorites', authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    const favorites = await prisma.favoriteItem.findMany({
+      where: { userId },
+      include: { product: true }
+    });
+    res.json(favorites.map(fav => fav.product));
+  } catch (err) {
+    res.status(500).json({ message: "Помилка отримання обраного" });
+  }
+});
+
+app.post('/api/favorites/toggle', authenticateToken, async (req, res) => {
+  const { productId } = req.body;
+  const userId = req.user.userId;
+
+  try {
+    const existing = await prisma.favoriteItem.findFirst({
+      where: { userId, productId: Number(productId) }
+    });
+
+    if (existing) {
+      await prisma.favoriteItem.delete({ where: { id: existing.id } });
+      return res.json({ message: "Видалено з обраного", isFavorite: false });
+    } else {
+      await prisma.favoriteItem.create({
+        data: { userId, productId: Number(productId) }
+      });
+      return res.json({ message: "Додано в обране", isFavorite: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: "Помилка сервера" });
+  }
 });
 
 // --- ORDERS ---
