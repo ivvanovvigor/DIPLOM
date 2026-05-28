@@ -101,6 +101,36 @@ app.delete('/api/cart/remove/:cartItemId', authenticateToken, async (req, res) =
   }
 });
 
+app.patch('/api/cart/update', authenticateToken, async (req, res) => {
+  const { id, quantity } = req.body; // id - це id запису в таблиці CartItem
+  const userId = req.user.userId;
+
+  try {
+    if (quantity <= 0) {
+      // Якщо кількість 0 або менше - видаляємо запис
+      await prisma.cartItem.deleteMany({
+        where: { id: Number(id), userId: userId }
+      });
+      return res.json({ message: "Товар видалено з кошика" });
+    }
+
+    // Оновлюємо кількість
+    const updated = await prisma.cartItem.updateMany({
+      where: { id: Number(id), userId: userId },
+      data: { quantity: Number(quantity) }
+    });
+
+    if (updated.count === 0) {
+      return res.status(404).json({ message: "Товар не знайдено" });
+    }
+
+    res.json({ message: "Кількість оновлено" });
+  } catch (e) {
+    console.error("Помилка при оновленні кількості:", e);
+    res.status(500).json({ message: "Помилка сервера" });
+  }
+});
+
 // --- FAVORITES ---
 app.get('/api/favorites', authenticateToken, async (req, res) => {
   const userId = req.user.userId;

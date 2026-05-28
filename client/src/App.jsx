@@ -104,7 +104,7 @@ function AppContent() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <Header cartItems={cartItems} favoriteItems={favoriteItems} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+        <Header cartItems={cartItems} favoriteItems={favoriteItems} isAuthenticated={isAuthenticated} removeFromCart={removeFromCart} onLogout={handleLogout} />
         <main>
           <Routes>
             <Route path="/shop" element={<Shop addToCart={addToCart} />} />
