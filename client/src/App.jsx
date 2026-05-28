@@ -33,6 +33,7 @@ function AppContent() {
     } catch (e) { console.error('Помилка кошика:', e); }
   }, []);
 
+  // Оновлення обраного з сервера
   const fetchFavoritesFromServer = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -61,7 +62,10 @@ function AppContent() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: product.id, quantity: 1 })
       });
-      if (response.ok) fetchCartFromServer();
+      if (response.ok) {
+        fetchCartFromServer();
+        showToast("Товар додано до кошика", "success");
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -89,10 +93,24 @@ function AppContent() {
     } catch (e) { console.error(e); }
   };
 
-  // ФУНКЦІЯ ОЧИЩЕННЯ: Оновлює UI одразу після замовлення
-  const clearCart = () => {
-    setCartItems([]);
+  // Дії з обраним
+  const toggleFavorite = async (product) => {
+    const token = localStorage.getItem('token');
+    if (!token) { showToast("Увійдіть у систему", "error"); return; }
+    try {
+      const response = await fetch(`${API_URL}/favorites/toggle`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: product.id })
+      });
+      if (response.ok) {
+        fetchFavoritesFromServer();
+        showToast("Список обраного оновлено", "success");
+      }
+    } catch (e) { console.error(e); }
   };
+
+  const clearCart = () => setCartItems([]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -104,19 +122,30 @@ function AppContent() {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <Header cartItems={cartItems} favoriteItems={favoriteItems} isAuthenticated={isAuthenticated} removeFromCart={removeFromCart} onLogout={handleLogout} />
+        <Header 
+          cartItems={cartItems} 
+          favoriteItems={favoriteItems} 
+          isAuthenticated={isAuthenticated} 
+          removeFromCart={removeFromCart} 
+          onLogout={handleLogout} 
+        />
         <main>
           <Routes>
             <Route path="/shop" element={<Shop addToCart={addToCart} />} />
+            <Route path="/product/:id" element={
+              <ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />
+            } />
             <Route path="/cart" element={isAuthenticated ?
               <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} clearCart={clearCart} />
+              : <Navigate to="/login" />}
+            />
+            <Route path="/favorites" element={isAuthenticated ?
+              <Favorites favoriteItems={favoriteItems} toggleFavorite={toggleFavorite} addToCart={addToCart} />
               : <Navigate to="/login" />}
             />
             <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setIsAuthenticated(true)} />} />
             <Route path="/profile" element={isAuthenticated ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/shop" />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/favorites" element={<Favorites />} />
           </Routes>
         </main>
       </div>
