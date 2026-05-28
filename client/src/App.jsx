@@ -216,7 +216,7 @@ function App() {
             {/* Захищені приватні роути */}
             <Route
               path="/shop"
-              element={isAuthenticated ? <Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} /> : <Navigate to="/login" />}
+              element={<Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />}
             />
 
             <Route
