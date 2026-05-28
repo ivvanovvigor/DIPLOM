@@ -7,6 +7,7 @@ import Shop from './Shop';
 import ProductDetails from './ProductDetails';
 import Cart from './Cart';
 import Favorites from './Favorites';
+import { ToastProvider } from './ToastContext';
 import PrivacyPolicy from './PrivacyPolicy';
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api`;
