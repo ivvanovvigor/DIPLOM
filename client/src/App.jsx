@@ -131,7 +131,7 @@ function AppContent() {
         />
         <main>
           <Routes>
-            <Route path="/shop" element={<Shop addToCart={addToCart} />} />
+            <Route path="/shop" element={<Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />} />
             <Route path="/product/:id" element={
               <ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />
             } />
