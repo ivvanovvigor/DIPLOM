@@ -145,6 +145,25 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
   }
 });
 
+// Маршрут для отримання замовлень поточного користувача
+app.get('/api/orders/my', authenticateToken, async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId: Number(req.user.userId) },
+      include: {
+        items: {
+          include: { product: true } // Якщо потрібно виводити назви товарів
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(orders);
+  } catch (e) {
+    console.error("Помилка при отриманні замовлень:", e);
+    res.status(500).json({ message: 'Помилка сервера' });
+  }
+});
+
 // --- НОВА ПОШТА ---
 app.post('/api/np/cities', async (req, res) => {
   const { search } = req.body;
