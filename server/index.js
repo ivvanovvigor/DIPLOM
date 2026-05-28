@@ -124,10 +124,16 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
         data: {
           userId: Number(req.user.userId),
           totalAmount: Number(totalAmount),
-          phone,
-          address,
-          paymentMethod,
-          items: { create: cartItems.map(item => ({ productId: Number(item.productId), quantity: item.quantity, price: item.price })) }
+          phone: phone || "Не вказано",
+          address: address || "Не вказано",
+          paymentMethod: paymentMethod || "Не вказано",
+          items: {
+            create: cartItems.map(item => ({
+              productId: Number(item.productId),
+              quantity: Number(item.quantity),
+              price: Number(item.price)
+            }))
+          }
         }
       });
       await tx.cartItem.deleteMany({ where: { userId: Number(req.user.userId) } });
