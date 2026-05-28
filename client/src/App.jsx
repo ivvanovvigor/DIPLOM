@@ -168,7 +168,12 @@ function App() {
   // ХМАРНИЙ ТOГЛ ОБРАНОГО
   const toggleFavorite = async (product) => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+
+    // Перевірка авторизації
+    if (!token) {
+      showToast("Ця функція доступна лише для авторизованих користувачів. Будь ласка, увійдіть або зареєструйтеся.", "error");
+      return;
+    }
 
     try {
       const response = await fetch(`${API_URL}/favorites/toggle`, {
@@ -212,7 +217,7 @@ function App() {
             <Route path="/register" element={!isAuthenticated ? <AuthForm mode="register" /> : <Navigate to="/shop" />} />
 
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            
+
             {/* Захищені приватні роути */}
             <Route
               path="/shop"

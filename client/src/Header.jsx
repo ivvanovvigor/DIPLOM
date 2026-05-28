@@ -158,7 +158,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart }) => {
           ) : (
             <div className="border-l border-gray-200 pl-4">
               <Link to="/login" className="text-xs font-bold uppercase tracking-wider text-black hover:opacity-70 transition">
-                Увійти
+                Увійти/Зареєструватися
               </Link>
             </div>
           )}
