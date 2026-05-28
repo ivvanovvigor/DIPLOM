@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
-import NPAddressSelector from './NPAddressSelector'; 
+import NPAddressSelector from './NPAddressSelector';
 
 const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => {
   const navigate = useNavigate();
@@ -120,23 +120,40 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
             <div className="bg-white p-6 shadow-md border h-fit sticky top-24">
               <h2 className="text-xs font-black uppercase text-gray-400 border-b pb-3 mb-4">Підсумок</h2>
-              
+
               <div className="space-y-4">
-                <input 
-                  type="tel" 
-                  placeholder="+380XXXXXXXXX" 
-                  value={phone} 
-                  onChange={(e) => setPhone(e.target.value)}
+                <input
+                  type="tel"
+                  placeholder="(+38) XXX-XXX-XX-XX"
+                  value={phone}
+                  onChange={(e) => {
+                    let input = e.target.value.replace(/\D/g, ''); // Залишаємо лише цифри
+                    // Якщо користувач видалив все, повертаємо порожній рядок
+                    if (input.length === 0) {
+                      setPhone('');
+                      return;
+                    }
+                    // Додаємо +38 на початок
+                    if (!input.startsWith('38')) input = '38' + input;
+                    // Форматуємо рядок: (+38) XXX-XXX-XX-XX
+                    let formatted = '(+38) ';
+                    if (input.length > 2) formatted += input.substring(2, 5);
+                    if (input.length > 5) formatted += '-' + input.substring(5, 8);
+                    if (input.length > 8) formatted += '-' + input.substring(8, 10);
+                    if (input.length > 10) formatted += '-' + input.substring(10, 12);
+
+                    setPhone(formatted);
+                  }}
                   className="w-full p-2 border text-sm"
                 />
-                
+
                 {/* Динамічний вибір адреси */}
-                <NPAddressSelector onCitySelect={(cityName) => setCity(cityName)} />
-                
-                <input 
-                  type="text" 
-                  placeholder="Вкажіть номер відділення" 
-                  value={warehouse} 
+                <NPAddressSelector onAddressChange={(cityName) => setCity(cityName)} />
+
+                <input
+                  type="text"
+                  placeholder="Вкажіть номер відділення"
+                  value={warehouse}
                   onChange={(e) => setWarehouse(e.target.value)}
                   className="w-full p-2 border text-sm"
                 />
@@ -144,8 +161,8 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
 
               <div className="mt-6 pt-4 border-t">
                 <span className="text-xl font-black text-blue-600">{finalTotal.toFixed(2)} UAH</span>
-                <button 
-                  onClick={handleCheckoutSubmit} 
+                <button
+                  onClick={handleCheckoutSubmit}
                   disabled={isSubmitting}
                   className="w-full mt-4 bg-black text-white py-3 text-xs font-bold uppercase hover:bg-gray-800"
                 >
