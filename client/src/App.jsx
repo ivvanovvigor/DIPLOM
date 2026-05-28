@@ -105,7 +105,6 @@ function AppContent() {
       });
       if (response.ok) {
         fetchFavoritesFromServer();
-        showToast("Список обраного оновлено", "success");
       }
     } catch (e) { console.error(e); }
   };
