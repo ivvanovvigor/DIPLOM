@@ -62,6 +62,23 @@ app.get('/api/products', async (req, res) => {
   res.json(products);
 });
 
+app.get('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await prisma.product.findUnique({
+      where: { id: Number(id) }
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Товар не знайдено" });
+    }
+
+    res.json(product);
+  } catch (e) {
+    res.status(500).json({ message: "Помилка сервера" });
+  }
+});
+
 // --- CART ---
 app.get('/api/cart', authenticateToken, async (req, res) => {
   const cartItems = await prisma.cartItem.findMany({
