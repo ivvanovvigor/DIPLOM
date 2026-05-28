@@ -108,13 +108,15 @@ function AppContent() {
         <main>
           <Routes>
             <Route path="/shop" element={<Shop addToCart={addToCart} />} />
-            <Route path="/cart" element={isAuthenticated ? 
-              <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} clearCart={clearCart} /> 
-              : <Navigate to="/login" />} 
+            <Route path="/cart" element={isAuthenticated ?
+              <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} clearCart={clearCart} />
+              : <Navigate to="/login" />}
             />
             <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setIsAuthenticated(true)} />} />
             <Route path="/profile" element={isAuthenticated ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/shop" />} />
+            <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/favorites" element={<Favorites />} />
           </Routes>
         </main>
       </div>
