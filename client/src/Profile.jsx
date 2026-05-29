@@ -168,7 +168,7 @@ const Profile = () => {
                   ))}
                 </div>
 
-                <div className="flex justify-between items-center pt-2">
+                <div className="flex justify-between items-center pt-2 gap-4">
                   <div>
                     {order.status !== 'cancelled' && (
                       <button
@@ -179,8 +179,10 @@ const Profile = () => {
                       </button>
                     )}
                   </div>
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                    Дата оформлення: {order.createdAt ? new Date(order.createdAt).toLocaleDateString('uk-UA') : 'Невідомо'}
+
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-gray-400 text-right">
+                    <p>Дата оформлення:</p>
+                    <p>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('uk-UA') : 'Невідомо'}</p>
                   </div>
                 </div>
               </div>
@@ -199,7 +201,7 @@ const Profile = () => {
             <p className="text-sm font-medium text-gray-900 mb-6 tracking-tight">
               Ви впевнені, що хочете скасувати це замовлення? Цю дію не можна буде повернути.
             </p>
-            
+
             <div className="flex space-x-3">
               <button
                 onClick={confirmCancelOrder}
@@ -207,7 +209,7 @@ const Profile = () => {
               >
                 Так, скасувати
               </button>
-              
+
               <button
                 onClick={() => {
                   setIsModalOpen(false);

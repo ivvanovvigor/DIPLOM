@@ -68,7 +68,7 @@ const Shop = ({ addToCart, toggleFavorite, favoriteItems = [] }) => {
         onClick={() => setIsFiltersOpen(!isFiltersOpen)}
         className="md:hidden m-4 py-2.5 bg-black text-white text-xs font-bold uppercase tracking-widest text-center"
       >
-        {isFiltersOpen ? 'Приховати фільтри ✕' : 'Фільтри ⚙️'}
+        {isFiltersOpen ? 'Приховати фільтри' : 'Фільтри'}
       </button>
 
       <aside className={`w-full md:w-64 bg-gray-50 border-r border-gray-100 p-6 flex-shrink-0 ${isFiltersOpen ? 'block' : 'hidden md:block'}`}>

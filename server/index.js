@@ -244,6 +244,30 @@ app.get('/api/orders/my', authenticateToken, async (req, res) => {
   }
 });
 
+app.patch('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    const order = await prisma.order.findFirst({
+      where: { id: Number(id), userId: Number(userId) }
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Замовлення не знайдено" });
+    }
+
+    const updatedOrder = await prisma.order.update({
+      where: { id: Number(id) },
+      data: { status: 'Cancelled' }
+    });
+
+    res.json({ message: "Замовлення скасовано", order: updatedOrder });
+  } catch (e) {
+    res.status(500).json({ message: "Помилка сервера" });
+  }
+});
+
 // --- НОВА ПОШТА ---
 app.post('/api/np/cities', async (req, res) => {
   const { search } = req.body;

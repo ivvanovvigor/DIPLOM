@@ -33,7 +33,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
   return (
     <header className="w-full bg-white border-b border-gray-100 px-6 py-5 md:px-12 sticky top-0 z-50">
       <div className="w-full flex justify-between items-center">
-        
+
         <Link to="/" className="text-lg font-black uppercase tracking-widest text-black hover:opacity-80 transition">
           MOTO STORE
         </Link>
@@ -52,7 +52,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
             </button>
 
             {isCartOpen && (
-              <div className="absolute right-0 mt-4 w-80 bg-white border border-gray-200 p-4 shadow-xl z-50">
+              <div className="absolute top-full right-0 mt-4 w-[calc(100vw-20px)] sm:w-80 md:max-w-md bg-white border border-gray-200 p-4 shadow-xl z-50">
                 <h3 className="text-[10px] font-black uppercase text-gray-400 border-b pb-2 mb-3">Ваш кошик</h3>
                 {cartItems.length === 0 ? (
                   <p className="text-gray-400 text-xs text-center py-6">Кошик порожній</p>
@@ -63,9 +63,9 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
                         <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-none">
                           <div className="flex items-center">
                             {/* ДОДАНО: Фото товару з бази */}
-                            <img 
-                              src={getImageUrl(item)} 
-                              alt={item.title || item.product?.title} 
+                            <img
+                              src={getImageUrl(item)}
+                              alt={item.title || item.product?.title}
                               className="w-12 h-12 object-cover mr-3 border border-gray-50"
                               onError={(e) => { e.target.src = '/placeholder.jpg'; }}
                             />
