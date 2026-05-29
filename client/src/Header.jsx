@@ -52,39 +52,44 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
             </button>
 
             {isCartOpen && (
-              <div className="absolute top-full right-0 mt-4 w-[calc(100vw-20px)] sm:w-80 md:max-w-md bg-white border border-gray-200 p-4 shadow-xl z-50">
-                <h3 className="text-[10px] font-black uppercase text-gray-400 border-b pb-2 mb-3">Ваш кошик</h3>
-                {cartItems.length === 0 ? (
-                  <p className="text-gray-400 text-xs text-center py-6">Кошик порожній</p>
-                ) : (
-                  <>
-                    <div className="max-h-60 overflow-y-auto">
-                      {cartItems.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-none">
-                          <div className="flex items-center">
-                            {/* ДОДАНО: Фото товару з бази */}
-                            <img
-                              src={getImageUrl(item)}
-                              alt={item.title || item.product?.title}
-                              className="w-12 h-12 object-cover mr-3 border border-gray-50"
-                              onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                            />
-                            <div className="text-xs">
-                              <p className="font-bold uppercase">{item.title || item.product?.title}</p>
-                              <p className="text-[10px] text-gray-500">{item.quantity} × {item.price || item.product?.price} UAH</p>
+              <>
+                {/* Затемнення фону (опціонально, але краще для UI) */}
+                <div className="fixed inset-0 z-40" onClick={() => setIsCartOpen(false)}></div>
+
+                {/* Сам кошик: fixed на мобільних, absolute на десктопах */}
+                <div className="fixed top-16 right-2 left-2 sm:absolute sm:top-full sm:right-0 sm:left-auto sm:mt-4 sm:w-80 md:w-96 bg-white border border-gray-200 p-4 shadow-xl z-50">
+                  <h3 className="text-[10px] font-black uppercase text-gray-400 border-b pb-2 mb-3">Ваш кошик</h3>
+                  {cartItems.length === 0 ? (
+                    <p className="text-gray-400 text-xs text-center py-6">Кошик порожній</p>
+                  ) : (
+                    <>
+                      <div className="max-h-60 overflow-y-auto">
+                        {cartItems.map((item) => (
+                          <div key={item.id} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-none">
+                            <div className="flex items-center">
+                              <img
+                                src={getImageUrl(item)}
+                                alt={item.title || item.product?.title}
+                                className="w-12 h-12 object-cover mr-3 border border-gray-50"
+                                onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                              />
+                              <div className="text-xs">
+                                <p className="font-bold uppercase">{item.title || item.product?.title}</p>
+                                <p className="text-[10px] text-gray-500">{item.quantity} × {item.price || item.product?.price} UAH</p>
+                              </div>
                             </div>
+                            <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 transition">✕</button>
                           </div>
-                          <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 transition">✕</button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 border-t pt-3">
-                      <div className="flex justify-between font-black text-xs uppercase mb-3"><span>Разом:</span><span>{totalSum.toFixed(2)} UAH</span></div>
-                      <Link to="/cart" onClick={() => setIsCartOpen(false)} className="block w-full py-3 text-center text-xs font-black uppercase bg-black text-white">Перейти до кошика</Link>
-                    </div>
-                  </>
-                )}
-              </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 border-t pt-3">
+                        <div className="flex justify-between font-black text-xs uppercase mb-3"><span>Разом:</span><span>{totalSum.toFixed(2)} UAH</span></div>
+                        <Link to="/cart" onClick={() => setIsCartOpen(false)} className="block w-full py-3 text-center text-xs font-black uppercase bg-black text-white">Перейти до кошика</Link>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
 
