@@ -18,14 +18,17 @@ app.use(cors({
 
 app.use(express.json());
 
-// --- MIDDLEWARE ---
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Доступ заборонено' });
+  
+  if (!token) return res.status(401).json({ message: 'Токен відсутній' });
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(403).json({ message: 'Недійсний токен' });
+    if (err) {
+      console.error("JWT Error:", err.message); 
+      return res.status(403).json({ message: 'Недійсний токен', error: err.message });
+    }
     req.user = decoded;
     next();
   });
