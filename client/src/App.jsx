@@ -14,9 +14,12 @@ const API_URL = `${import.meta.env.VITE_API_URL}/api`;
 
 function AppContent() {
   const { showToast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [authTrigger, setAuthTrigger] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [favoriteItems, setFavoriteItems] = useState([]);
+
+  // Динамічна перевірка токена
+  const checkAuth = () => !!localStorage.getItem('token');
 
   // Оновлення кошика з сервера
   const fetchCartFromServer = useCallback(async () => {
@@ -46,13 +49,13 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (checkAuth()) {
       fetchCartFromServer();
       fetchFavoritesFromServer();
     }
-  }, [isAuthenticated, fetchCartFromServer, fetchFavoritesFromServer]);
+  }, [authTrigger, fetchCartFromServer, fetchFavoritesFromServer]);
 
-  // Дії з кошиком
+  // Функціонал кошика
   const addToCart = async (product) => {
     const token = localStorage.getItem('token');
     if (!token) { showToast("Увійдіть у систему", "error"); return; }
@@ -62,10 +65,7 @@ function AppContent() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: product.id, quantity: 1 })
       });
-      if (response.ok) {
-        fetchCartFromServer();
-        showToast("Товар додано до кошика", "success");
-      }
+      if (response.ok) { fetchCartFromServer(); showToast("Товар додано", "success"); }
     } catch (e) { console.error(e); }
   };
 
@@ -93,7 +93,6 @@ function AppContent() {
     } catch (e) { console.error(e); }
   };
 
-  // Дії з обраним
   const toggleFavorite = async (product) => {
     const token = localStorage.getItem('token');
     if (!token) { showToast("Увійдіть у систему", "error"); return; }
@@ -103,17 +102,13 @@ function AppContent() {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId: product.id })
       });
-      if (response.ok) {
-        fetchFavoritesFromServer();
-      }
+      if (response.ok) fetchFavoritesFromServer();
     } catch (e) { console.error(e); }
   };
 
-  const clearCart = () => setCartItems([]);
-
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setIsAuthenticated(false);
+    setAuthTrigger(!authTrigger);
     setCartItems([]);
     setFavoriteItems([]);
   };
@@ -124,27 +119,19 @@ function AppContent() {
         <Header 
           cartItems={cartItems} 
           favoriteItems={favoriteItems} 
-          isAuthenticated={isAuthenticated} 
+          isAuthenticated={checkAuth()} 
           removeFromCart={removeFromCart} 
           onLogout={handleLogout} 
         />
         <main>
           <Routes>
             <Route path="/shop" element={<Shop addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />} />
-            <Route path="/product/:id" element={
-              <ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />
-            } />
-            <Route path="/cart" element={isAuthenticated ?
-              <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} clearCart={clearCart} />
-              : <Navigate to="/login" />}
-            />
-            <Route path="/favorites" element={isAuthenticated ?
-              <Favorites favoriteItems={favoriteItems} toggleFavorite={toggleFavorite} addToCart={addToCart} />
-              : <Navigate to="/login" />}
-            />
-            <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setIsAuthenticated(true)} />} />
-            <Route path="/register" element={<AuthForm mode="register" onAuthSuccess={() => setIsAuthenticated(true)} />} />
-            <Route path="/profile" element={isAuthenticated ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
+            <Route path="/product/:id" element={<ProductDetails addToCart={addToCart} toggleFavorite={toggleFavorite} favoriteItems={favoriteItems} />} />
+            <Route path="/cart" element={checkAuth() ? <Cart cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} /> : <Navigate to="/login" />} />
+            <Route path="/favorites" element={checkAuth() ? <Favorites favoriteItems={favoriteItems} toggleFavorite={toggleFavorite} addToCart={addToCart} /> : <Navigate to="/login" />} />
+            <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setAuthTrigger(!authTrigger)} />} />
+            <Route path="/register" element={<AuthForm mode="register" onAuthSuccess={() => setAuthTrigger(!authTrigger)} />} />
+            <Route path="/profile" element={checkAuth() ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/shop" />} />
           </Routes>
         </main>
