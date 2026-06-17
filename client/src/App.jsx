@@ -143,6 +143,7 @@ function AppContent() {
               : <Navigate to="/login" />}
             />
             <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setIsAuthenticated(true)} />} />
+            <Route path="/register" element={<AuthForm mode="register" onAuthSuccess={() => setIsAuthenticated(true)} />} />
             <Route path="/profile" element={isAuthenticated ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to="/shop" />} />
           </Routes>
