@@ -58,19 +58,10 @@ const AuthForm = ({ mode }) => {
 
       if (response.ok) {
         if (mode === 'login') {
-          // Авторизація користувача та збереження сесії в контексті
           login(data.user, data.token);
-
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
 
-          // Миттєво сповіщаємо App.jsx про успішну авторизацію у поточній вкладці
           window.dispatchEvent(new Event('authChange'));
-
-          // Тригери для синхронізації кошика та обраного в App.jsx для інших систем
-          window.dispatchEvent(new Event('storage'));
-          window.dispatchEvent(new Event('favoritesUpdated'));
-
-          // Перенаправлення на корінь додатка
           navigate('/');
         } else {
           // Скидання системних маркерів перед переходом на авторизацію

@@ -25,11 +25,9 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
   };
 
   const handleLogoutClick = () => {
-    logout();
+    onLogout();
     showToast("Ви успішно вийшли з системи", "success");
-    setTimeout(() => {
-      window.location.reload();
-    }, 400);
+    navigate('/shop');
   };
 
   return (
@@ -95,10 +93,15 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
             )}
           </div>
 
-          {token ? (
+          {user || token ? (
             <div className="flex items-center space-x-4 border-l pl-4">
               <Link to="/profile" className="text-xs font-bold uppercase">Кабінет</Link>
-              <button onClick={handleLogoutClick} className="text-xs font-bold uppercase text-red-500">Вийти</button>
+              <button
+                onClick={handleLogoutClick}
+                className="text-xs font-bold uppercase text-red-500 hover:text-red-600 transition"
+              >
+                Вийти
+              </button>
             </div>
           ) : (
             <Link to="/login" className="text-xs font-bold uppercase border-l pl-4">Увійти</Link>

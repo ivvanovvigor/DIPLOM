@@ -55,6 +55,20 @@ function AppContent() {
     }
   }, [authTrigger, fetchCartFromServer, fetchFavoritesFromServer]);
 
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setAuthTrigger(prev => !prev);
+    };
+
+    window.addEventListener('authChange', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('authChange', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
+  }, []);
+
   // Функціонал кошика
   const addToCart = async (product) => {
     const token = localStorage.getItem('token');
@@ -108,20 +122,21 @@ function AppContent() {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setAuthTrigger(!authTrigger);
+    localStorage.removeItem('user');
     setCartItems([]);
     setFavoriteItems([]);
+    setAuthTrigger(prev => !prev);
   };
 
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <Header 
-          cartItems={cartItems} 
-          favoriteItems={favoriteItems} 
-          isAuthenticated={checkAuth()} 
-          removeFromCart={removeFromCart} 
-          onLogout={handleLogout} 
+        <Header
+          cartItems={cartItems}
+          favoriteItems={favoriteItems}
+          isAuthenticated={checkAuth()}
+          removeFromCart={removeFromCart}
+          onLogout={handleLogout}
         />
         <main>
           <Routes>
