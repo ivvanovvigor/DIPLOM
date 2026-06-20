@@ -26,12 +26,9 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
 
   const handleLogoutClick = () => {
     logout();
-    if (typeof removeFromCart === 'function') {
-    }
     showToast("Ви успішно вийшли з системи", "success");
-    setTimeout(() => {
-      navigate('/shop');
-    }, 100);
+    window.dispatchEvent(new Event('storage'));
+    navigate('/shop');
   };
 
   return (
