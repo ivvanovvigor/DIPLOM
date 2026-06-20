@@ -36,7 +36,7 @@ model Product {
   favoriteBy   FavoriteItem[]
 }
 
-// МОДЕЛЬ ЗАМОВЛЕННЯ (ОНОВЛЕНА)
+// МОДЕЛЬ ЗАМОВЛЕННЯ
 model Order {
   id            Int         @id @default(autoincrement())
   totalAmount   Float
@@ -75,7 +75,7 @@ model CartItem {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   productId Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade) // ✅ Додали зв'язок з продуктом
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade) // Додали зв'язок з продуктом
 
   quantity Int @default(1)
 }

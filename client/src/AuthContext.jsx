@@ -3,14 +3,14 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Ініціалізація стану з localStorage при першому завантаженні додатка
+  // ---- State to hold user and token information ---
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // Функція для збереження даних сесії при успішній автентифікації
+  // --- Function to handle login ---
   const login = (userData, userToken) => {
     localStorage.setItem('token', userToken);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
   };
 
-  // Функція для очищення даних сесії та скидання стану
+  // --- Function to handle logout ---
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // Слухач змін у localStorage для синхронізації стану між вкладками
+  // --- Effect to listen for changes in localStorage ---
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'token') {
