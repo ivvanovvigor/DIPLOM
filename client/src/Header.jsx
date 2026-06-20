@@ -27,7 +27,10 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
   const handleLogoutClick = () => {
     onLogout();
     showToast("Ви успішно вийшли з системи", "success");
-    navigate('/shop');
+    setTimeout(() => {
+      window.dispatchEvent(new Event('authChange'));
+      window.dispatchEvent(new Event('storage'));
+    }, 50);
   };
 
   return (
