@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from './ToastContext';
 import { useAuth } from './AuthContext';
 
-const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuantity }) => {
+const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuantity, onLogout }) => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -25,7 +25,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
   };
 
   const handleLogoutClick = () => {
-    onLogout();
+    if (onLogout) onLogout();
     showToast("Ви успішно вийшли з системи", "success");
     navigate('/shop');
   };
