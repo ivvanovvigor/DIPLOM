@@ -30,7 +30,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
     }
     showToast("Ви успішно вийшли з системи", "success");
     setTimeout(() => {
-      navigate('/login');
+      navigate('/shop');
     }, 100);
   };
 
