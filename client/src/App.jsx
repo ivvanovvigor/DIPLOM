@@ -106,24 +106,22 @@ function AppContent() {
     } catch (e) { console.error(e); }
   };
 
-  const { logout } = useAuth();   // в App або Header
-
   const handleLogout = () => {
-    logout();                     // це повинно скинути token + user в контексті
+    localStorage.removeItem('token');
+    setAuthTrigger(!authTrigger);
     setCartItems([]);
     setFavoriteItems([]);
-    navigate('/shop');
   };
 
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        <Header
-          cartItems={cartItems}
-          favoriteItems={favoriteItems}
-          isAuthenticated={checkAuth()}
-          removeFromCart={removeFromCart}
-          onLogout={handleLogout}
+        <Header 
+          cartItems={cartItems} 
+          favoriteItems={favoriteItems} 
+          isAuthenticated={checkAuth()} 
+          removeFromCart={removeFromCart} 
+          onLogout={handleLogout} 
         />
         <main>
           <Routes>
