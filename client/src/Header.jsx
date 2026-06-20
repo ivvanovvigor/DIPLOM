@@ -25,7 +25,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
   };
 
   const handleLogoutClick = () => {
-    if (onLogout) onLogout();
+    onLogout();
     showToast("Ви успішно вийшли з системи", "success");
     navigate('/shop');
   };
