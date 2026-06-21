@@ -135,9 +135,7 @@ const AuthForm = ({ mode }) => {
               />
               <label htmlFor="agree">
                 Я погоджуюсь з
-                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline ml-1">
-                  Політикою конфіденційності
-                </a>
+                <Link to="/privacy-policy" className="text-blue-600 font-bold hover:underline ml-1">Політикою конфіденційності</Link>
               </label>
             </div>
           )}
