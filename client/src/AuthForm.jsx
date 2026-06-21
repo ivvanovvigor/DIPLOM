@@ -135,7 +135,7 @@ const AuthForm = ({ mode }) => {
               />
               <label htmlFor="agree">
                 Я погоджуюсь з
-                <Link to="/privacy-policy" className="text-blue-600 font-bold hover:underline ml-1">Політикою конфіденційності</Link>
+                <Link to="/privacypolicy" className="text-blue-600 font-bold hover:underline ml-1">Політикою конфіденційності</Link>
               </label>
             </div>
           )}
