@@ -20,15 +20,27 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// === ТЕСТОВИЙ РОУТ ДЛЯ ДІАГНОСТИКИ ===
+app.post('/api/test-post', (req, res) => {
+  console.log('=== TEST POST RECEIVED ===');
+  console.log('Body:', req.body);
+  res.json({
+    success: true,
+    message: "POST працює!",
+    receivedBody: req.body,
+    timestamp: new Date().toISOString()
+  });
+});
+
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-  
+
   if (!token) return res.status(401).json({ message: 'Токен відсутній' });
 
   jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
-      console.error("JWT Error:", err.message); 
+      console.error("JWT Error:", err.message);
       return res.status(403).json({ message: 'Недійсний токен', error: err.message });
     }
     req.user = decoded;
