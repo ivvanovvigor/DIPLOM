@@ -163,24 +163,25 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
               <div className="space-y-4">
                 <input
                   type="tel"
-                  placeholder="(+38) XXX-XXX-XX-XX"
+                  placeholder="+38 (093) 123-45-67"
                   value={phone}
                   onChange={(e) => {
-                    let value = e.target.value.replace(/\D/g, ''); // залишаємо тільки цифри
+                    let digits = e.target.value.replace(/\D/g, ''); // залишаємо тільки цифри
                     // Автодоповнення +38
-                    if (value.length > 0 && !value.startsWith('38')) {
-                      value = '38' + value;
+                    if (digits.length > 0 && !digits.startsWith('38')) {
+                      digits = '38' + digits;
                     }
-                    // Форматування: +38 (093) 123-45-67
+                    // Форматування
                     let formatted = '+38';
-                    if (value.length > 2) formatted += ' (' + value.slice(2, 5);
-                    if (value.length > 5) formatted += ') ' + value.slice(5, 8);
-                    if (value.length > 8) formatted += '-' + value.slice(8, 10);
-                    if (value.length > 10) formatted += '-' + value.slice(10, 12);
+                    if (digits.length > 2) formatted += ` (${digits.slice(2, 5)}`;
+                    if (digits.length > 5) formatted += `) ${digits.slice(5, 8)}`;
+                    if (digits.length > 8) formatted += `-${digits.slice(8, 10)}`;
+                    if (digits.length > 10) formatted += `-${digits.slice(10, 12)}`;
                     setPhone(formatted);
                   }}
-                  className="w-full p-2 border text-sm"
+                  className="w-full p-3 border border-gray-200 focus:border-black outline-none text-sm"
                   maxLength={17}
+                  required
                 />
                 <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
               </div>
