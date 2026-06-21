@@ -11,12 +11,14 @@ const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key';
 
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:5173', 'https://moto-store-eight.vercel.app'],
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
