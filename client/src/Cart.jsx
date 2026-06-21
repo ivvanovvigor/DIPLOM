@@ -68,7 +68,10 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
       if (!response.ok) throw new Error("Помилка при оформленні");
 
       showToast('Замовлення успішно оформлено!', 'success');
-      if (typeof clearCart === 'function') clearCart();
+      if (typeof clearCart === 'function') {
+        clearCart();
+      }
+      setCartItems?.([]);
       navigate('/profile');
     } catch (error) {
       showToast(error.message, 'error');
@@ -162,8 +165,22 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                   type="tel"
                   placeholder="(+38) XXX-XXX-XX-XX"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    let value = e.target.value.replace(/\D/g, ''); // залишаємо тільки цифри
+                    // Автодоповнення +38
+                    if (value.length > 0 && !value.startsWith('38')) {
+                      value = '38' + value;
+                    }
+                    // Форматування: +38 (093) 123-45-67
+                    let formatted = '+38';
+                    if (value.length > 2) formatted += ' (' + value.slice(2, 5);
+                    if (value.length > 5) formatted += ') ' + value.slice(5, 8);
+                    if (value.length > 8) formatted += '-' + value.slice(8, 10);
+                    if (value.length > 10) formatted += '-' + value.slice(10, 12);
+                    setPhone(formatted);
+                  }}
                   className="w-full p-2 border text-sm"
+                  maxLength={17}
                 />
                 <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
               </div>
@@ -173,7 +190,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                 <div className="space-y-3">
                   <label className="flex items-center space-x-3 cursor-pointer text-sm">
                     <input type="radio" value="Online Оплата / Оплата частинами" checked={paymentMethod === 'Online Оплата / Оплата частинами'} onChange={(e) => setPaymentMethod(e.target.value)} />
-                    <span>Online Оплата / Оплата частинами</span>
+                    <span>Online Оплата (2% знижка)</span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer text-sm">
                     <input type="radio" value="Оплата при отриманні" checked={paymentMethod === 'Оплата при отриманні'} onChange={(e) => setPaymentMethod(e.target.value)} />

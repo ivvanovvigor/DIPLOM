@@ -1,84 +1,92 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from './AuthContext'; // Інтеграція контексту авторизації
-import { useToast } from './ToastContext'; // Красиві сповіщення замість alert
+import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const Profile = () => {
-  const { user } = useAuth(); // Беремо актуального юзера з контексту
+  const { user } = useAuth();
   const { showToast } = useToast();
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Стейт для керування кастомним модальним вікном
+  // Модальне вікно
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
 
-  useEffect(() => {
+  // Завантаження замовлень
+  const fetchOrders = async () => {
     const token = localStorage.getItem('token');
-    if (!token || !user) return;
+    if (!token || !user) {
+      setLoading(false);
+      return;
+    }
 
-    // Безпечна конкатенація URL без косих лапок для Vercel
-    fetch(import.meta.env.VITE_API_URL + '/api/orders/my', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Не вдалося завантажити замовлення');
-        return res.json();
-      })
-      .then(data => {
-        setOrders(Array.isArray(data) ? data : []);
-      })
-      .catch(err => {
-        console.error("Помилка завантаження замовлень:", err);
-        showToast("Помилка при завантаженні замовлень", "error");
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/my`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (!response.ok) throw new Error('Не вдалося завантажити замовлення');
+
+      const data = await response.json();
+      setOrders(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Помилка завантаження замовлень:", err);
+      showToast("Не вдалося завантажити історію замовлень", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, [user]);
 
-  // Відкриття модалки підтвердження
+  // Скасування замовлення
   const openCancelModal = (orderId) => {
     setOrderToCancel(orderId);
     setIsModalOpen(true);
   };
 
-  // Підтвердження скасування замовлення
   const confirmCancelOrder = async () => {
     if (!orderToCancel) return;
+
     const token = localStorage.getItem('token');
 
     try {
-      // Конкатенація рядків для запобігання помилок маршрутизації
-      const response = await fetch(import.meta.env.VITE_API_URL + '/api/orders/' + orderToCancel + '/cancel', {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/orders/${orderToCancel}/cancel`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
         }
-      });
-
-      if (!response.ok) {
-        throw new Error('Не вдалося скасувати замовлення');
-      }
-
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.id === orderToCancel ? { ...order, status: 'cancelled' } : order
-        )
       );
+
+      if (!response.ok) throw new Error('Не вдалося скасувати замовлення');
+
       showToast("Замовлення успішно скасовано", "success");
+
+      // Повторно завантажуємо дані з сервера — найнадійніший спосіб
+      await fetchOrders();
+
     } catch (err) {
       console.error(err);
       showToast("Не вдалося скасувати замовлення", "error");
     } finally {
-      // Блок закриття модалки
       setIsModalOpen(false);
       setOrderToCancel(null);
     }
   };
 
   const renderStatus = (status) => {
-    if (status === 'cancelled') {
+    const normalizedStatus = status?.toLowerCase();
+
+    if (normalizedStatus === 'cancelled') {
       return (
         <span className="text-[10px] font-black uppercase tracking-widest bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-none">
           Скасовано
@@ -92,7 +100,6 @@ const Profile = () => {
     );
   };
 
-  // Екран обмеження доступу, якщо юзер не авторизований
   if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
@@ -108,10 +115,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6 relative">
+    <div className="min-h-screen bg-gray-50 py-12 px-6">
       <div className="max-w-4xl mx-auto">
-
-        {/* БЛОК ІНФОРМАЦІЇ КОРИСТУВАЧА */}
+        {/* Інформація про користувача */}
         <div className="bg-white p-8 border border-gray-100 shadow-sm rounded-none mb-10">
           <h1 className="text-xl font-black uppercase tracking-widest mb-6 text-gray-900 border-b border-gray-100 pb-3">
             Мій кабінет
@@ -122,27 +128,26 @@ const Profile = () => {
               Користувач: <span className="font-bold ml-1">{user.fullName}</span>
             </p>
             <p className="text-gray-900">
-              Email: <span className="font-mono text-gray-600 ml-1">{user.email || 'Не вказано'}</span>
+              Email: <span className="font-mono text-gray-600 ml-1">{user.email}</span>
             </p>
           </div>
         </div>
 
-        {/* БЛОК ІСТОРІЇ ЗАМОВЛЕНЬ */}
+        {/* Історія замовлень */}
         <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">
           Історія замовлень ({orders.length})
         </h2>
 
-        {orders.length === 0 ? (
+        {loading ? (
+          <p className="text-center text-gray-500 py-12">Завантаження...</p>
+        ) : orders.length === 0 ? (
           <div className="bg-white p-8 border border-gray-100 shadow-sm rounded-none text-center">
             <p className="text-sm text-gray-400 italic">Ви ще нічого не замовляли.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {orders.map(order => (
-              <div
-                key={order.id}
-                className="bg-white p-6 border border-gray-200 border-l-4 border-l-black shadow-sm rounded-none transition hover:border-gray-400"
-              >
+              <div key={order.id} className="bg-white p-6 border border-gray-200 border-l-4 border-l-black shadow-sm rounded-none">
                 <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
                   <div className="flex items-center space-x-3">
                     <span className="text-xs uppercase font-black tracking-wider text-gray-900">
@@ -156,7 +161,7 @@ const Profile = () => {
                 </div>
 
                 <div className="text-xs text-gray-800 space-y-2 mb-4">
-                  {order.items && order.items.map(item => (
+                  {order.items?.map(item => (
                     <div key={item.id} className="flex justify-between items-center py-0.5">
                       <span className="font-medium uppercase tracking-tight text-gray-900">
                         • {item.product?.title || 'Товар'}
@@ -170,7 +175,7 @@ const Profile = () => {
 
                 <div className="flex justify-between items-center pt-2 gap-4">
                   <div>
-                    {order.status !== 'cancelled' && (
+                    {order.status?.toLowerCase() !== 'cancelled' && (
                       <button
                         onClick={() => openCancelModal(order.id)}
                         className="h-8 px-4 border border-red-600 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition active:scale-95 rounded-none"
@@ -191,9 +196,9 @@ const Profile = () => {
         )}
       </div>
 
-      {/* КАСТОМНЕ МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
+      {/* Модальне вікно підтвердження */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white border-2 border-black p-6 max-w-sm w-full shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] rounded-none">
             <h3 className="text-xs font-black uppercase tracking-widest text-red-600 mb-3">
               Підтвердження дії
@@ -223,7 +228,6 @@ const Profile = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
