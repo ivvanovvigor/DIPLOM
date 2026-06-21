@@ -205,28 +205,39 @@ app.post('/api/favorites/toggle', authenticateToken, async (req, res) => {
 // --- ORDERS ---
 app.post('/api/orders', authenticateToken, async (req, res) => {
   const { cartItems, totalAmount, phone, address, paymentMethod } = req.body;
+  const userId = req.user.userId;
 
   try {
-    const order = await prisma.order.create({
-      data: {
-        userId: Number(req.user.userId),
-        totalAmount: Number(totalAmount),
-        phone: String(phone),
-        address: String(address),
-        paymentMethod: String(paymentMethod),
-        items: {
-          create: cartItems.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price
-          }))
+    const order = await prisma.$transaction(async (tx) => {
+      // 1. Створюємо замовлення
+      const newOrder = await tx.order.create({
+        data: {
+          userId: Number(userId),
+          totalAmount: Number(totalAmount),
+          phone: String(phone),
+          address: String(address),
+          paymentMethod: String(paymentMethod),
+          items: {
+            create: cartItems.map(item => ({
+              productId: Number(item.productId),
+              quantity: Number(item.quantity),
+              price: Number(item.price)
+            }))
+          }
         }
-      }
+      });
+
+      await tx.cartItem.deleteMany({
+        where: { userId: Number(userId) }
+      });
+
+      return newOrder;
     });
+
     res.status(201).json(order);
   } catch (error) {
-    console.error("Помилка Prisma:", error);
-    res.status(500).json({ message: "Помилка сервера" });
+    console.error("Помилка при оформленні замовлення:", error);
+    res.status(500).json({ message: "Помилка при оформленні замовлення" });
   }
 });
 
