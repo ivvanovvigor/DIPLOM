@@ -71,7 +71,6 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
       if (typeof clearCart === 'function') {
         clearCart();
       }
-      setCartItems?.([]);
       navigate('/profile');
     } catch (error) {
       showToast(error.message, 'error');
