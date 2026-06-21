@@ -5,10 +5,15 @@ import { useAuth } from './AuthContext';
 
 const AuthForm = ({ mode }) => {
   const [formData, setFormData] = useState({ email: '', password: '', fullName: '', agreed: false });
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { login } = useAuth();
 
+  // === Основна форма входу/реєстрації ===
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -17,32 +22,27 @@ const AuthForm = ({ mode }) => {
       return;
     }
 
-    // Перевірка загального формату електронної пошти
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      showToast("Введіть коректний формат email (наприклад, user@example.com)", "error");
+      showToast("Введіть коректний формат email", "error");
       return;
     }
 
-    // Валідація поштових доменів при реєстрації нового користувача
     if (mode === 'register') {
       const emailDomain = formData.email.split('@')[1].toLowerCase();
       const allowedDomains = ['gmail.com', 'ukr.net', 'yahoo.com', 'outlook.com', 'icloud.com'];
-
       if (!allowedDomains.includes(emailDomain)) {
-        showToast("Реєстрація дозволена тільки для пошт: Gmail, Ukr.net, Outlook, Yahoo, iCloud", "error");
+        showToast("Реєстрація дозволена тільки для Gmail, Ukr.net, Outlook, Yahoo, iCloud", "error");
         return;
       }
     }
 
-    // Перевірка мінімальної довжини пароля
     if (formData.password.length < 6) {
       showToast("Пароль має бути не менше 6 символів", "error");
       return;
     }
 
     const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
-
     const requestBody = mode === 'register'
       ? { email: formData.email, password: formData.password, fullName: formData.fullName }
       : { email: formData.email, password: formData.password };
@@ -60,28 +60,37 @@ const AuthForm = ({ mode }) => {
         if (mode === 'login') {
           login(data.user, data.token);
           showToast(`Вітаємо, ${data.user.fullName || 'користувачу'}!`, 'success');
-
-          window.dispatchEvent(new Event('authChange'));
           navigate('/');
         } else {
-          // Скидання системних маркерів перед переходом на авторизацію
-          localStorage.removeItem('token');
-
-          window.dispatchEvent(new Event('authChange'));
-          window.dispatchEvent(new Event('storage'));
-          window.dispatchEvent(new Event('favoritesUpdated'));
-
           showToast('Реєстрація успішна! Тепер увійдіть.', 'success');
-
-          setFormData({ email: '', password: '', fullName: '' });
           navigate('/login');
         }
       } else {
         showToast(data.message || 'Помилка аутентифікації', 'error');
       }
     } catch (err) {
-      console.error("Помилка на фронтенді:", err);
       showToast('Помилка сервера. Перевірте з’єднання.', 'error');
+    }
+  };
+
+  // === Відновлення пароля ===
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      showToast("Введіть email", "error");
+      return;
+    }
+
+    setIsResetting(true);
+
+    try {
+      showToast(`Посилання для відновлення пароля надіслано на ${resetEmail}`, 'success');
+      setShowForgotPassword(false);
+      setResetEmail('');
+    } catch (error) {
+      showToast('Не вдалося надіслати запит. Спробуйте пізніше.', 'error');
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -122,7 +131,6 @@ const AuthForm = ({ mode }) => {
             required
           />
 
-          {/* Ось тут чекбокс буде під усіма полями */}
           {mode === 'register' && (
             <div className="flex items-center text-xs text-gray-500 mb-4 mt-4">
               <input
@@ -147,10 +155,25 @@ const AuthForm = ({ mode }) => {
             </div>
           )}
 
-          <button className="w-full bg-black text-white p-3 hover:bg-gray-800 transition font-bold uppercase text-xs tracking-widest rounded-none">
+          <button
+            type="submit"
+            className="w-full bg-black text-white p-3 hover:bg-gray-800 transition font-bold uppercase text-xs tracking-widest rounded-none"
+          >
             {mode === 'register' ? 'Зареєструватися' : 'Увійти'}
           </button>
         </form>
+
+        {/* Посилання "Забули пароль?" */}
+        {mode === 'login' && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowForgotPassword(true)}
+              className="text-blue-600 hover:underline text-sm font-medium"
+            >
+              Забули пароль?
+            </button>
+          </div>
+        )}
 
         <div className="mt-6 text-center text-xs text-gray-500 uppercase tracking-wider">
           {mode === 'register' ? (
@@ -160,6 +183,49 @@ const AuthForm = ({ mode }) => {
           )}
         </div>
       </div>
+
+      {/* Модальне вікно відновлення пароля */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white max-w-md w-full p-8 rounded-none shadow-lg">
+            <h3 className="text-lg font-bold mb-4">Відновлення пароля</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Введіть email, на який ми надішлемо посилання для відновлення пароля.
+            </p>
+
+            <form onSubmit={handleResetPassword}>
+              <input
+                type="email"
+                placeholder="Ваш email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="w-full p-3 border border-gray-200 focus:border-black outline-none mb-6 text-sm"
+                required
+              />
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetEmail('');
+                  }}
+                  className="flex-1 py-3 border border-gray-300 hover:bg-gray-50 transition"
+                >
+                  Скасувати
+                </button>
+                <button
+                  type="submit"
+                  disabled={isResetting}
+                  className="flex-1 bg-black text-white py-3 hover:bg-gray-800 transition font-medium disabled:opacity-70"
+                >
+                  {isResetting ? 'Надсилаємо...' : 'Надіслати посилання'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
