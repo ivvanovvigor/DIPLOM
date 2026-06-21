@@ -95,28 +95,63 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                 .slice()
                 .sort((a, b) => a.id - b.id)
                 .map(item => (
-                <div key={item.id} className="bg-white p-6 flex justify-between items-center border">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={getImageUrl(item)}
-                      alt={item.product?.title || item.title}
-                      className="w-16 h-16 object-cover border border-gray-100"
-                      onError={(e) => { e.target.src = '/placeholder.jpg'; }}
-                    />
-                    <div>
-                      <h3 className="font-bold text-sm uppercase">{item.product?.title || item.title}</h3>
-                      <p className="text-xs text-gray-500">{(item.product?.price || item.price || 0).toFixed(2)} UAH</p>
+                  <div key={item.id} className="bg-white p-4 sm:p-6 flex flex-col sm:flex-row gap-4 border">
+
+                    {/* Зображення + Інформація */}
+                    <div className="flex items-start gap-4 flex-1">
+                      <img
+                        src={getImageUrl(item)}
+                        alt={item.product?.title || item.title}
+                        className="w-20 h-20 sm:w-24 sm:h-24 object-cover border border-gray-100 flex-shrink-0"
+                        onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-sm uppercase leading-tight">
+                          {item.product?.title || item.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {(item.product?.price || item.price || 0).toFixed(2)} UAH
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Керування кількістю + Видалення */}
+                    <div className="flex flex-col sm:items-end gap-3 sm:gap-4 w-full sm:w-auto">
+
+                      {/* Блок зміни кількості */}
+                      <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3">
+                        <div className="flex items-center border border-gray-300 rounded-md">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="w-9 h-9 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 text-lg font-medium"
+                          >
+                            −
+                          </button>
+
+                          <span className="w-10 text-center font-medium text-sm border-x border-gray-300 py-2">
+                            {item.quantity}
+                          </span>
+
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="w-9 h-9 flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 text-lg font-medium"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* Кнопка "Видалити" */}
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-red-500 hover:text-red-600 text-xs font-bold uppercase whitespace-nowrap"
+                        >
+                          Видалити
+                        </button>
+                      </div>
+
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-4">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-2 font-bold">-</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 font-bold">+</button>
-                    <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-[10px] font-bold uppercase ml-4">Видалити</button>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
 
             {/* Блок оформлення */}
