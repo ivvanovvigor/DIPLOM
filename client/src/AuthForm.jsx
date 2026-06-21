@@ -129,13 +129,20 @@ const AuthForm = ({ mode }) => {
                 type="checkbox"
                 id="agree"
                 checked={formData.agreed || false}
-                className="mr-2"
+                className="mr-2 accent-blue-600"
                 onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
                 required
               />
-              <label htmlFor="agree">
-                Я погоджуюсь з
-                <Link to="/privacypolicy" className="text-blue-600 font-bold hover:underline ml-1">Політикою конфіденційності</Link>
+              <label htmlFor="agree" className="cursor-pointer">
+                Я погоджуюсь з{' '}
+                <a
+                  href="/privacypolicy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 font-medium hover:underline"
+                >
+                  Політикою конфіденційності
+                </a>
               </label>
             </div>
           )}

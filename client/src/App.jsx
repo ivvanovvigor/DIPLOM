@@ -147,6 +147,7 @@ function AppContent() {
             <Route path="/login" element={<AuthForm mode="login" onAuthSuccess={() => setAuthTrigger(!authTrigger)} />} />
             <Route path="/register" element={<AuthForm mode="register" onAuthSuccess={() => setAuthTrigger(!authTrigger)} />} />
             <Route path="/profile" element={checkAuth() ? <Profile onLogout={handleLogout} /> : <Navigate to="/login" />} />
+            <Route path="/privacypolicy" element={<PrivacyPolicy />} />
             <Route path="*" element={<Navigate to="/shop" />} />
           </Routes>
         </main>
