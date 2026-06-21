@@ -180,7 +180,7 @@ const Cart = ({ cartItems = [], removeFromCart, updateQuantity, clearCart }) => 
                     setPhone(formatted);
                   }}
                   className="w-full p-3 border border-gray-200 focus:border-black outline-none text-sm"
-                  maxLength={18}
+                  maxLength={19}
                   required
                 />
                 <NPAddressSelector onCityChange={setCity} onWarehouseChange={setWarehouse} />
