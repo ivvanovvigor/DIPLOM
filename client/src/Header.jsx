@@ -98,7 +98,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
                             <img
                               src={getImageUrl(item)}
                               alt={item.title || item.product?.title}
-                              className="w-14 h-14 object-cover border"
+                              className="w-14 h-14 object-cover"
                               onError={(e) => { e.target.src = '/placeholder.jpg'; }}
                             />
                             <div className="flex-1 text-xs">
@@ -111,7 +111,7 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
                             </div>
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="text-red-500 hover:text-red-600 text-xl leading-none self-start"
+                              className="text-gray-200 hover:text-gray-500 text-xl leading-none self-start"
                             >
                               ✕
                             </button>
