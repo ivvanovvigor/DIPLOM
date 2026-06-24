@@ -83,14 +83,59 @@ const Header = ({ cartItems = [], favoriteItems = [], removeFromCart, updateQuan
 
             {/* Модальне вікно кошика */}
             {isCartOpen && (
-              <div className="fixed inset-0 z-40" onClick={() => setIsCartOpen(false)}>
-                <div 
-                  className="fixed top-16 right-4 sm:absolute sm:top-full sm:right-0 sm:mt-3 w-80 bg-white border border-gray-200 shadow-xl z-50 p-4"
-                  onClick={e => e.stopPropagation()}
-                >
-                  {/* ... (твій код кошика) ... */}
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsCartOpen(false)}></div>
+                <div className="fixed top-16 right-2 left-2 sm:absolute sm:top-full sm:right-0 sm:left-auto sm:mt-4 sm:w-80 md:w-96 bg-white border border-gray-200 p-4 shadow-xl z-50 max-h-[80vh] overflow-auto">
+                  <h3 className="text-[10px] font-black uppercase text-gray-400 border-b pb-2 mb-3">Ваш кошик</h3>
+
+                  {cartItems.length === 0 ? (
+                    <p className="text-gray-400 text-xs text-center py-8">Кошик порожній</p>
+                  ) : (
+                    <>
+                      <div className="max-h-60 overflow-y-auto space-y-4">
+                        {cartItems.map((item) => (
+                          <div key={item.id} className="flex gap-3">
+                            <img
+                              src={getImageUrl(item)}
+                              alt={item.title || item.product?.title}
+                              className="w-14 h-14 object-cover border"
+                              onError={(e) => { e.target.src = '/placeholder.jpg'; }}
+                            />
+                            <div className="flex-1 text-xs">
+                              <p className="font-bold uppercase leading-tight">
+                                {item.title || item.product?.title}
+                              </p>
+                              <p className="text-gray-500">
+                                {item.quantity} × {(item.price || item.product?.price || 0).toFixed(2)} UAH
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => removeFromCart(item.id)}
+                              className="text-red-500 hover:text-red-600 text-xl leading-none self-start"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t">
+                        <div className="flex justify-between font-black text-sm mb-3">
+                          <span>Разом:</span>
+                          <span>{totalSum.toFixed(2)} UAH</span>
+                        </div>
+                        <Link
+                          to="/cart"
+                          onClick={() => setIsCartOpen(false)}
+                          className="block w-full py-3 text-center text-xs font-black uppercase bg-black text-white hover:bg-gray-800 transition"
+                        >
+                          Перейти до кошика
+                        </Link>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
+              </>
             )}
           </div>
 
